@@ -47,7 +47,7 @@ You can then run using this database as
 
 ### Credits
 
-- Favicon was generated using [Grok 3](https://grok.com), then removed background using [remove bg](https://www.remove.bg/upload) and converted using [favicon.icmo](https://favicon.io/).
+- Favicon was generated using [Grok 3](https://grok.com), then removed background using [remove bg](https://www.remove.bg/upload) and converted using [favicon.ico](https://favicon.io/).
 - [SQLite](https://sqlite.org/) for a phenomenal database engine.
 - [SQLPage community](https://github.com/sqlpage/SQLPage/discussions) for very useful discussions.
 

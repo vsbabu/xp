@@ -5,7 +5,6 @@ __pycache__/
 .virtual_documents/
 
 *.db
-*.csv
 
 temp.* 
 
