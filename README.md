@@ -30,7 +30,6 @@ Is a personal expense dashboard viewer built using [SQLPage](https://sql-page.co
   }
   ```
 
-````
 You can then run using this database as
 
   ```shell
@@ -44,10 +43,11 @@ You can then run using this database as
 - `search_results.sql` used to be written using CTEs for each query. I changed this to a temporary table to reduce query code size and to act as a cache. Since temporary tables are specific to sessions, it shouldn't collide with other parallel users.
 - `search_results.sql` has examples of presenting  your daily numbers wrapped by weeks similar to github contribution graph. Similarly, `shell.sql` has SQL for generating various date ranges. Could be interesting since both these come up often when building dashboards.
 - Some columns in the db are pre-computed and loaded, but not used at the moment. I added these for some future  ideas I have.
+- I've hard coded Indian Rupee (₹) as the currency and formatted it using `printf()` because Indian formatting is different from thousands/millions. SQLPage currently formats according to that convention even when currency is specified as Indian Rupee (_INR_).
 
 ### Credits
 
 - Favicon was generated using [Grok 3](https://grok.com), then removed background using [remove bg](https://www.remove.bg/upload) and converted using [favicon.icmo](https://favicon.io/).
 - [SQLite](https://sqlite.org/) for a phenomenal database engine.
 - [SQLPage community](https://github.com/sqlpage/SQLPage/discussions) for very useful discussions.
-````
+
