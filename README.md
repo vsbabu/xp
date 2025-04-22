@@ -16,7 +16,7 @@ Is a personal expense dashboard viewer built using [SQLPage](https://sql-page.co
 - Install `sqlpage.bin` somewhere.
 - Run `sqlpage.bin -d ./sample`. This should create an empty sqlpage.db and run migrations to create schema.
 - Navigate to http://localhost:8080/ - you should see an empty dashboard.
-- Go to http://localhost:8080/csv*import.sql and load \_sample/sample.csv*.
+- Go to http://localhost:8080/csv_import.sql and load _sample/sample.csv_.
 - Once it is done, you should have 10K records in the database. You can now explore the dasboard via menus.
 - If you want to create a larger sample, see `sample/gensamplecsv.py`. It requires _pandas_ and _faker_ as dependencies and will - overwrite _sample.csv_. So, better to copy the python script somewhere else and edit it and then run it.
 
