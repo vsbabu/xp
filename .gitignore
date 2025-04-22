@@ -1,0 +1,14 @@
+__pycache__/
+*.py[cod]
+*$py.class
+.ipynb_checkpoints/
+.virtual_documents/
+
+*.db
+*.csv
+
+temp.* 
+
+sqlpage/
+sqlpage.db
+
