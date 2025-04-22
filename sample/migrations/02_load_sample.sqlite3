@@ -1,0 +1,5 @@
+-- if uploading via web interface is time consuming, use sqlite3 cli
+-- sqlite3 sqlpage.db < 02_load_sample.sqlite3
+.mode csv
+.import sample.csv expense --skip 1 -v
+

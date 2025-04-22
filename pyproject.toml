@@ -1,0 +1,5 @@
+[tool.ruff]
+include = ["pyproject.toml", "*.py"]
+
+[tool.pyright]
+reportMissingImports =  true
