@@ -106,5 +106,5 @@ SELECT 'shell' AS component,
   {"title":"", "icon":"'||IIF(COALESCE(sqlpage.cookie('topsidebar'),'') = '', 'layout-sidebar-left-collapse', 'layout-navbar-collapse')||'","link":"/toggle_menu.sql"},
   {"title":"", "icon":"'||IIF(COALESCE(sqlpage.cookie('lightdarkstatus'),'') = '', 'moon-stars', 'sun-high')||'","link":"/toggle_theme.sql"}
   ]' AS menu_item,
-'sqlpage ' || sqlpage.version()
+  '[XP](https://github.com/vsbabu/xp/) built with [SQLPage '||sqlpage.version()||'](https://sql-page.com/)'
 AS footer from submenu_month, submenu_qtr, submenu_yr, submenu_recent;
