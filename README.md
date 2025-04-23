@@ -45,10 +45,10 @@ You can then run using this database as
   - [search_form.sql](search_form.sql) - has parameters pre-filled according to query string (or defaults in its absence). Changing these and filtering will reload the page with form parameters passed as query string.
   - [csv_import.sql](csv_import.sql) - has a form to replace the `expense` table with a csv file. It calls [csv_process.sql](csv_process.sql) to load the csv uploaded into the table.
   - [assets/](assets/) - favicon files
-  - [sample/migrations/01_create_schema.sql](sample/migrations/01_create_schema.sql) - this runs on server startup and is used to create the schema - just one table `expense`
-  - [sample/migrations/02_load_sample.sqlite3](sample/migrations/02_load_sample.sqlite3) - this is NOT run automatically because it does not have _.sql_ extension. It can be used to directly load csv file into database using _sqlite3 cli_ - it is much faster than the web interface.
-  - [sample/sample.csv](sample/sample.csv) - a generated sample file with 10K records
-  - [sample/gensamplecsv.py](sample/gensamplecsv.py) - file that generates random sample data into _sample.csv_. It requires _pandas_ and _faker_ as dependencies and will overwrite _sample.csv_. So, better to copy the script somewhere else, edit it and then run it. You can use this to create larger or customized sample data to load.
+- [sample/migrations/01_create_schema.sql](sample/migrations/01_create_schema.sql) - this runs on server startup and is used to create the schema - just one table `expense`
+- [sample/migrations/02_load_sample.sqlite3](sample/migrations/02_load_sample.sqlite3) - this is NOT run automatically because it does not have _.sql_ extension. It can be used to directly load csv file into database using _sqlite3 cli_ - it is much faster than the web interface.
+- [sample/sample.csv](sample/sample.csv) - a generated sample file with 10K records
+- [sample/gensamplecsv.py](sample/gensamplecsv.py) - file that generates random sample data into _sample.csv_. It requires _pandas_ and _faker_ as dependencies and will overwrite _sample.csv_. So, better to copy the script somewhere else, edit it and then run it. You can use this to create larger or customized sample data to load.
 
 ### Notable stuff
 
