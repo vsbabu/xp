@@ -1,3 +1,10 @@
+# /// script
+# requires-python = ">=3.13"
+# dependencies = [
+#     "faker",
+#     "pandas[excel]",
+# ]
+# ///
 import pandas as pd
 import random
 from faker import Faker

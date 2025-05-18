@@ -1,8 +1,16 @@
+# Python generated files
 __pycache__/
 *.py[cod]
 *$py.class
 .ipynb_checkpoints/
 .virtual_documents/
+build/
+dist/
+wheels/
+*.egg-info
+
+#Virtual environments
+.venv
 
 *.db
 
