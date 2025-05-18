@@ -16,9 +16,9 @@ Is a personal expense dashboard viewer built using [SQLPage](https://sql-page.co
 - Install `sqlpage.bin` somewhere.
 - Run `sqlpage.bin -d ./sample`. This should create an empty sqlpage.db and run migrations to create schema.
 - Navigate to http://localhost:8080/ - you should see an empty dashboard.
-- Go to http://localhost:8080/csv_import.sql and load _sample/sample.csv_.
+- Go to http://localhost:8080/csv*import.sql and load \_sample/sample.csv*.
 - Once it is done, you should have 10K records in the database. You can now explore the dasboard via menus.
-- If you want to create a larger sample, see `sample/gensamplecsv.py` description below. 
+- If you want to create a larger sample, see `sample/gensamplecsv.py` description below.
 
 ### Using your own data
 
@@ -32,11 +32,12 @@ Is a personal expense dashboard viewer built using [SQLPage](https://sql-page.co
 
 You can then run using this database as
 
-  ```shell
-  sqlpage.bin -c personal.json
-  ```
+```shell
+sqlpage.bin -c personal.json
+```
 
 ### Code Organization
+
 - [index.sql](index.sql) - main container file. This points to the root of the rendered site. If query string has missing parameters, it is filled with default values before calling `shell.sql`.
   - [shell.sql](shell.sql) - included to draw the menu items. It has SQL for generating various date ranges based on minimum and maximum available data in the `expense` table. It also includes calls to _toggle_ menu items for dark mode and side menu.
     - [toggle_menu.sql](toggle_menu.sql) - sets a cookie when clicked and switch to side menu. On clicking again, cookie is removed. Presence of cookie is used to change default menu location and default icon.
@@ -48,17 +49,16 @@ You can then run using this database as
 - [sample/migrations/01_create_schema.sql](sample/migrations/01_create_schema.sql) - this runs on server startup and is used to create the schema - just one table `expense`
 - [sample/migrations/02_load_sample.sqlite3](sample/migrations/02_load_sample.sqlite3) - this is NOT run automatically because it does not have _.sql_ extension. It can be used to directly load csv file into database using _sqlite3 cli_ - it is much faster than the web interface.
 - [sample/sample.csv](sample/sample.csv) - a generated sample file with 10K records
-- [sample/gensamplecsv.py](sample/gensamplecsv.py) - file that generates random sample data into _sample.csv_. It requires _pandas_ and _faker_ as dependencies and will overwrite _sample.csv_. So, better to copy the script somewhere else, edit it and then run it. You can use this to create larger or customized sample data to load.
+- [sample/gensamplecsv.py](sample/gensamplecsv.py) - file that generates random sample data into _sample.csv_. It requires _pandas_ and _faker_ as dependencies and will overwrite _sample.csv_. So, better to copy the script somewhere else, edit it and then run it. You can use this to create larger or customized sample data to load. Dependencies are available in [uv](https://github.com/astral-sh/uv). If you install _uv_, you can simply run `uv run gensamplecsv.py`.
 
 ### Notable stuff
 
 - There is no security. It is supposed to be used by you on your local machine. Ensure there is a firewall!
 - If you want security for such websites, say for internal use, my go to solution has been using nginx and [oauth_proxy](https://github.com/oauth2-proxy/oauth2-proxy) in the front.
-- Some columns in the db are pre-computed and loaded, but not used at the moment. I added these for some future  ideas I have.
+- Some columns in the db are pre-computed and loaded, but not used at the moment. I added these for some future ideas I have.
 
 ### Credits
 
 - Favicon was generated using [Grok 3](https://grok.com), then removed background using [remove bg](https://www.remove.bg/upload) and converted using [favicon.ico](https://favicon.io/).
 - [SQLite](https://sqlite.org/) for a phenomenal database engine.
 - [SQLPage community](https://github.com/sqlpage/SQLPage/discussions) for very useful discussions.
-
