@@ -9,6 +9,7 @@ SELECT 'dynamic' AS component,
 													'end', ifnull($end, current_date),
 													'category',ifnull($category,''),
 													'exclude', ifnull($exclude,''),
+													'payee', ifnull($payee, ''),
 													'datagrid', ifnull($datagrid,''))
   )
 	AS properties;

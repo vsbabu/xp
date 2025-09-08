@@ -24,16 +24,23 @@ SELECT
   6 as width
 ;
 
+select 
+    'payee'  as name,
+    '' as label,
+    'search'          as prefix_icon,
+    'Payee contains:'        as prefix,
+    $payee as value,
+     4 as width;
 
 WITH c AS (
 SELECT distinct(category) as category FROM expense where category <> 'Transfer' order by 1)
 SELECT
-    'category[]' as name,
-    'Categories' as label,
+    'category[]' as name, '' as label,
+    'Categories' as placeholder,
     'select' as type,
     true as multiple,
     true as create_new,
-    true as searchable, 7 as width,
+    true as searchable, 4 as width,
   json_group_array(json_object(
     'label', category,
     'value', category,
@@ -48,7 +55,7 @@ select
   'checkbox' as type,
   $exclude = 1 as checked,
   1 as value,
-  3 as width;
+  2 as width;
 
 select
   'datagrid' as name,
@@ -57,6 +64,8 @@ select
   $datagrid = 1 as checked,
   1 as value,
   2 as width;
+
+
 
 /*
 select

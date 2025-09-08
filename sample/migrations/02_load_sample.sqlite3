@@ -3,3 +3,4 @@
 .mode csv
 .import sample.csv expense --skip 1 -v
 
+insert into payees select id, payee from expense;

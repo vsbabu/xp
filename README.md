@@ -9,6 +9,8 @@ Is a personal expense dashboard viewer built using [SQLPage](https://sql-page.co
 - A dynamic menu is built using the data available in the database to provide queries by various date ranges like recent months, quarters, financial years etc. By default, current month is shown. See `shell.sql`.
 - Various data summarization for a given search/filter is available as tables and graphs.You can also choose to show individual records. See `search_results.sql`.
 - A search form pre-filled with current filter is there at the bottom. It also has an option to multi-select categories of expenses to further filter down. You can also exclude selected categories. See `search_form.sql`.
+- Search also allows you to do FTS5 fuzzy match with payee / narration column.
+- You can also choose to display full records instead of just summary.
 
 ### Getting started
 

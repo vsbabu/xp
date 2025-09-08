@@ -17,6 +17,8 @@ copy expense(id
 ) from 'expense_data_input'
 with (header true, delimiter ',', quote '"')
 ;
+delete from payees;
+insert into payees select id, payee from expense;
 
 select 
     'alert'                    as component,
