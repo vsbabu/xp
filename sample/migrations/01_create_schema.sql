@@ -6,4 +6,4 @@ CREATE TABLE IF NOT EXISTS expense (
 );
 CREATE index idx_dt ON expense(dt);
 
-CREATE VIRTUAL TABLE payees using fts5(id UNINDEXED, payee)
+CREATE VIRTUAL TABLE payees using fts5(id UNINDEXED, payee);
