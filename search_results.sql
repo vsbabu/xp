@@ -29,37 +29,54 @@ WHERE date(e.dt) BETWEEN
 select 'title' as component,
   $t as contents;
 
+/** Show in/out/net only if both in and out are present. If not, just show the only one present */
+WITH x AS (select sum(payment) as payment, sum(deposit) as deposit from filtered WHERE category <> 'Transfer')
 select
     'big_number'          as component,
     3                     as columns,
-    'colorfull_dashboard' as id;
+    'colorfull_dashboard' as id
+from x
+where x.payment > 0 
+  and x.deposit > 0
+union
+select
+    'big_number'          as component,
+    1                     as columns,
+    'colorfull_dashboard' as id
+from x
+where (x.payment > 0 or  x.deposit > 0)
+  and not (x.payment > 0 and x.deposit > 0)
+;
 
-WITH x AS (select * from filtered WHERE category <> 'Transfer')
+WITH y AS (select sum(payment) as spayment, sum(deposit) as sdeposit, sum(net) as snet,
+         sum(iif(payment>0, 1, 0)) as cpayment, sum(iif(deposit>0, 1, 0)) as cdeposit, count(1) as cnet from filtered WHERE category <> 'Transfer')
 select
     1 as d,
-    'In ('||sum(iif(x.net>0, 1, 0))||')' as title,
-    printf('₹%,.2f',sum(iif(x.net>0, x.net, 0))) as value,
+    'In ('||y.cdeposit||')' as title,
+    printf('₹%,.2f',y.sdeposit) as value,
     ''       as unit,
-    iif(sum(iif(x.net>0, x.net, 0))>0, 'green', 'gray') as color
-from x
+    iif(y.sdeposit > 0, 'green', 'gray') as color
+from y
+where y.sdeposit > 0
 union
-select 
+select
     2 as d,
-    'Out ('||sum(iif(x.net<0, 1, 0))||')' as title,
-    printf('₹%,.2f',-1*sum(iif(x.net<0, x.net, 0))) as value,
+    'Out ('||y.cpayment||')' as title,
+    printf('₹%,.2f',y.spayment) as value,
     ''       as unit,
-    iif(sum(iif(x.net<0, x.net, 0))<0, 'red', 'gray') as color
-from x
+    iif(y.spayment > 0, 'red', 'gray') as color
+from y
+where y.spayment > 0
 union
 select
     3 as d,
-    'Net ('||count(x.net)||')' as title,
-    printf('₹%,.2f',sum(x.net)) as value,
-    ''     as unit,
-    iif(sum(x.net)<0,'orange', 'teal')   as color
-from x
-  ;
-
+    'Net ('||y.cnet||')' as title,
+    printf('₹%,.2f',y.snet) as value,
+    ''       as unit,
+    iif(y.snet > 0, 'teal', 'orange') as color
+from y
+where y.spayment > 0 and y.sdeposit > 0
+;
 
 SELECT
   'chart' as component,
@@ -67,6 +84,8 @@ SELECT
   'bar' as type,
   true as time;
 
+WITH y AS (select sum(payment) as spayment, sum(deposit) as sdeposit, sum(net) as snet,
+         sum(iif(payment>0, 1, 0)) as cpayment, sum(iif(deposit>0, 1, 0)) as cdeposit, count(1) as cnet from filtered WHERE category <> 'Transfer')
 SELECT
     -- change to group by days if range is up to 2 months
     iif(julianday(date_range_end)-julianday(date_range_start)>60,
@@ -75,8 +94,8 @@ SELECT
   as x,
     cast(sum(net)/1000 as integer) AS value,
     'Net' as series
-FROM filtered
-where category <> 'Transfer'
+FROM filtered, y
+where category <> 'Transfer' and (y.spayment >0 and y.sdeposit>0)
 GROUP BY 1
 union
 SELECT
@@ -86,8 +105,8 @@ SELECT
   as x,
     cast(sum(deposit)/1000 as integer) AS value,
     'Income' as series
-FROM filtered
-where category <> 'Transfer'
+FROM filtered, y
+where category <> 'Transfer' and (y.sdeposit > 0)
 GROUP BY 1
 union
 SELECT
@@ -97,8 +116,8 @@ SELECT
   as x,
     abs(cast(sum(payment)/1000 as integer)) AS value,
     'Expense' as series
-FROM filtered
-where category <> 'Transfer'
+FROM filtered, y
+where category <> 'Transfer' and (y.spayment > 0)
 GROUP BY 1
 ORDER BY 3 asc, 1 asc
 ;
@@ -109,6 +128,7 @@ select
     'Net(K) Split' as title,
     TRUE      as labels;
 
+-- TODO: Add a link to category filter query in values. sqlchart doesn't support this yet.
 SELECT
     category as label,
     cast(sum(net)/1000 as integer) AS y
@@ -117,6 +137,8 @@ where category not in ('Transfer', 'Reconcile', 'Salary', 'Interest')
 GROUP BY 1
 ORDER BY 1 asc
 ;
+
+-- FIXME: This shows no category values, for 2026-Q1 on feb 26th. Future empty ranges is NOT the problem
 select 'chart' as component, 
     'By Category' as title,
     'bar' as type,
@@ -126,7 +148,6 @@ select 'chart' as component,
     true as time,
     500 as height
 ;
-
 select category as series, 
     -- change to group by days if range is up to 2 months
     iif(julianday(date_range_end)-julianday(date_range_start)>60,
@@ -200,7 +221,7 @@ params AS (SELECT date($start) as begin_cal, date($end) as end_cal),
 FROM bounds, all_dates_metric adm
 GROUP BY adm.week
 ;
-
+/*
 select
     'chart'             as component,
     ''            as title,
@@ -232,7 +253,7 @@ params AS (SELECT date($start) as begin_cal, date($end) as end_cal),
   FROM bounds, all_dates where  dt < bounds.end_sat
   ),
   metric AS (
-    /* THIS IS YOUR CTE FOR GETTING METRICS */
+    -- THIS IS YOUR CTE FOR GETTING METRICS 
     SELECT 
     date(x.dt) AS dt, sum(x.net) as val FROM params p, filtered x
     WHERE date(x.dt) BETWEEN p.begin_cal AND p.end_cal
@@ -259,6 +280,7 @@ FROM bounds, all_dates_metric adm
 GROUP BY 1,2,3
 order by 2 desc, 3 asc
 ;
+*/
 select 'table' as component
     , TRUE     as sort
     , TRUE     as search
