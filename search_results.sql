@@ -49,13 +49,15 @@ where (x.payment > 0 or  x.deposit > 0)
 ;
 
 WITH y AS (select sum(payment) as spayment, sum(deposit) as sdeposit, sum(net) as snet,
-         sum(iif(payment>0, 1, 0)) as cpayment, sum(iif(deposit>0, 1, 0)) as cdeposit, count(1) as cnet from filtered WHERE category <> 'Transfer')
+         sum(iif(payment>0, 1, 0)) as cpayment, sum(iif(deposit>0, 1, 0)) as cdeposit, count(1) as cnet,
+        cast(sum(payment)*100/sum(deposit) as integer) as expratio from filtered WHERE category <> 'Transfer')
 select
     1 as d,
     'In ('||y.cdeposit||')' as title,
     printf('₹%,.2f',y.sdeposit) as value,
     ''       as unit,
-    iif(y.sdeposit > 0, 'green', 'gray') as color
+    iif(y.sdeposit > 0, 'green', 'gray') as color,
+    '' as progress_percent, '' as progress_color
 from y
 where y.sdeposit > 0
 union
@@ -64,16 +66,24 @@ select
     'Out ('||y.cpayment||')' as title,
     printf('₹%,.2f',y.spayment) as value,
     ''       as unit,
-    iif(y.spayment > 0, 'red', 'gray') as color
+    iif(y.spayment > 0, 'red', 'gray') as color,
+    '' as progress_percent, '' as progress_color
 from y
 where y.spayment > 0
 union
 select
     3 as d,
     'Net ('||y.cnet||')' as title,
-    printf('₹%,.2f',y.snet) as value,
+    printf('₹%,.2f',y.snet) as value, 
     ''       as unit,
-    iif(y.snet > 0, 'teal', 'orange') as color
+    iif(y.snet > 0, 'cyan', 'pink') as color,
+    y.expratio as progress_percent,
+    case
+      when y.expratio > 80 then 'danger'
+      when y.expratio > 70 then 'warning'
+      when y.expratio > 50 then 'yellow'
+      else 'success'
+    end as progress_color
 from y
 where y.spayment > 0 and y.sdeposit > 0
 ;
