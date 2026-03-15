@@ -6,14 +6,10 @@
 -- We can safely drop if exists without impacting concurrent series
 -- and proceed.
 drop table if exists filtered;
-create temporary table filtered AS select e.*,
---  NOTE: we can further reduce the query size by persisting start and end date as two new columns in the filtered table with each row
-  iif($start is null, date(concat(strftime('%Y',iif(abs(strftime('%m',current_date))<=3,date(current_date,'-1 year'), current_date)),'-04-01')), date($start)) as date_range_start,
-  iif($end is null, date(concat(strftime('%Y',iif(abs(strftime('%m',current_date))>3,date(current_date,'+1 year'), current_date)),'-03-31')), date($end)) as date_range_end
+create temporary table filtered AS select e.*
 from expense e
 WHERE date(e.dt) BETWEEN 
-    iif($start is null, date(concat(strftime('%Y',iif(abs(strftime('%m',current_date))<=3,date(current_date,'-1 year'), current_date)),'-04-01')), date($start)) and
-    iif($end is null, date(concat(strftime('%Y',iif(abs(strftime('%m',current_date))>3,date(current_date,'+1 year'), current_date)),'-03-31')), date($end))
+    date($start) and date($end)
   and e.category in (
     select value as category from json_each($category) where $category <> '' and ifnull($exclude,'') = ''
     union
@@ -110,7 +106,7 @@ WITH y AS (select sum(payment) as spayment, sum(deposit) as sdeposit, sum(net) a
          sum(iif(payment>0, 1, 0)) as cpayment, sum(iif(deposit>0, 1, 0)) as cdeposit, count(1) as cnet from filtered WHERE category <> 'Transfer')
     -- change to group by days if range is up to 2 months
 SELECT
-    iif(julianday(date_range_end)-julianday(date_range_start)>60,
+    iif(julianday($end)-julianday($start)>60,
     strftime('%Y-%m', date(dt)),
     strftime('%Y-%m-%d', date(dt)))
   as x,
@@ -121,7 +117,7 @@ where category <> 'Transfer' and (y.sdeposit > 0)
 GROUP BY 1
 union
 SELECT
-    iif(julianday(date_range_end)-julianday(date_range_start)>60,
+    iif(julianday($end)-julianday($start)>60,
     strftime('%Y-%m', date(dt)),
     strftime('%Y-%m-%d', date(dt)))
   as x,
@@ -132,7 +128,7 @@ where category <> 'Transfer' and (y.spayment > 0)
 GROUP BY 1
 union
 SELECT
-    iif(julianday(date_range_end)-julianday(date_range_start)>60,
+    iif(julianday($end)-julianday($start)>60,
     strftime('%Y-%m', date(dt)),
     strftime('%Y-%m-%d', date(dt)))
   as x,
@@ -143,7 +139,7 @@ where category <> 'Transfer' and (y.spayment >0 and y.sdeposit>0)
 GROUP BY 1
 union
 SELECT
-    iif(julianday(date_range_end)-julianday(date_range_start)>60,
+    iif(julianday($end)-julianday($start)>60,
     strftime('%Y-%m', date(f.dt)),
     strftime('%Y-%m-%d', date(f.dt)))
   as x,
@@ -183,7 +179,7 @@ select 'chart' as component,
 ;
 select category as series, 
     -- change to group by days if range is up to 2 months
-    iif(julianday(date_range_end)-julianday(date_range_start)>60,
+    iif(julianday($end)-julianday($start)>60,
     strftime('%Y-%m', date(dt)),
     strftime('%Y-%m-%d', date(dt))) as label,
   cast(sum(net)/1 as integer) as value 
