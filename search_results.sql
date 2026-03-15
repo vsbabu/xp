@@ -33,7 +33,7 @@ select 'title' as component,
 WITH x AS (select sum(payment) as payment, sum(deposit) as deposit from filtered WHERE category <> 'Transfer')
 select
     'big_number'          as component,
-    3                     as columns,
+    4                     as columns,
     'colorfull_dashboard' as id
 from x
 where x.payment > 0 
@@ -86,6 +86,18 @@ select
     end as progress_color
 from y
 where y.spayment > 0 and y.sdeposit > 0
+union
+select
+    4 as d,
+    'Invest ('||count(f.net)||')' as title,
+    printf('₹%,.2f',sum(f.net)) as value, 
+    ''       as unit,
+    'lime' as color,
+    '' as progress_percent,
+    '' as progress_color
+from filtered f
+where f.investment = 1
+having count(f.net) > 0
 ;
 
 SELECT
@@ -96,25 +108,14 @@ SELECT
 
 WITH y AS (select sum(payment) as spayment, sum(deposit) as sdeposit, sum(net) as snet,
          sum(iif(payment>0, 1, 0)) as cpayment, sum(iif(deposit>0, 1, 0)) as cdeposit, count(1) as cnet from filtered WHERE category <> 'Transfer')
-SELECT
     -- change to group by days if range is up to 2 months
-    iif(julianday(date_range_end)-julianday(date_range_start)>60,
-    strftime('%Y-%m', date(dt)),
-    strftime('%Y-%m-%d', date(dt)))
-  as x,
-    cast(sum(net)/1000 as integer) AS value,
-    'Net' as series
-FROM filtered, y
-where category <> 'Transfer' and (y.spayment >0 and y.sdeposit>0)
-GROUP BY 1
-union
 SELECT
     iif(julianday(date_range_end)-julianday(date_range_start)>60,
     strftime('%Y-%m', date(dt)),
     strftime('%Y-%m-%d', date(dt)))
   as x,
     cast(sum(deposit)/1000 as integer) AS value,
-    'Income' as series
+    '1. Income' as series
 FROM filtered, y
 where category <> 'Transfer' and (y.sdeposit > 0)
 GROUP BY 1
@@ -125,9 +126,31 @@ SELECT
     strftime('%Y-%m-%d', date(dt)))
   as x,
     abs(cast(sum(payment)/1000 as integer)) AS value,
-    'Expense' as series
+    '2. Expense' as series
 FROM filtered, y
 where category <> 'Transfer' and (y.spayment > 0)
+GROUP BY 1
+union
+SELECT
+    iif(julianday(date_range_end)-julianday(date_range_start)>60,
+    strftime('%Y-%m', date(dt)),
+    strftime('%Y-%m-%d', date(dt)))
+  as x,
+    cast(sum(net)/1000 as integer) AS value,
+    '3. Net' as series
+FROM filtered, y
+where category <> 'Transfer' and (y.spayment >0 and y.sdeposit>0)
+GROUP BY 1
+union
+SELECT
+    iif(julianday(date_range_end)-julianday(date_range_start)>60,
+    strftime('%Y-%m', date(f.dt)),
+    strftime('%Y-%m-%d', date(f.dt)))
+  as x,
+    abs(cast(sum(f.net)/1000 as integer)) AS value,
+    '4. Invest' as series
+FROM filtered f
+where f.investment = 1
 GROUP BY 1
 ORDER BY 3 asc, 1 asc
 ;
@@ -231,6 +254,10 @@ params AS (SELECT date($start) as begin_cal, date($end) as end_cal),
 FROM bounds, all_dates_metric adm
 GROUP BY adm.week
 ;
+/* Commented out: Heatmap is ugly to watch and not very useful as I imagined.
+ * Still, leaving it here for future reference. Ideally, the cells should be much smaller
+ * to make it look good.
+ */
 /*
 select
     'chart'             as component,
@@ -322,7 +349,8 @@ select dt as 'Date'
   , payment
   , deposit
   , net
-  , iif(net>=0, 'teal', 'orange') as _sqlpage_color
+  -- Change accounts as per your data
+  , iif(investment=1, 'lime', iif(net>=0, 'teal', 'orange')) as _sqlpage_color
 from filtered where ifnull($datagrid,'') <> ''
 ;
 with totals as (
@@ -340,6 +368,21 @@ with totals as (
     , iif(sum(iif(net>0, net, 0))>0, 'green', 'red') as _sqlpage_color
   from filtered where ifnull($datagrid,'') <> '' 
     and category <> 'Transfer' -- transfer bloats  pay/deposit columns on sum
+),
+investments as (
+  select 'Investments' as 'Date'
+    , '' as account
+    , '' as payee
+    , '' as category
+    , sum(payment) as payment
+    , sum(deposit) as deposit
+    , sum(net) as net
+    , TRUE      as _sqlpage_footer
+    , iif(sum(iif(net>0, net, 0))>0, 'lime', 'pink') as _sqlpage_color
+  from filtered where ifnull($datagrid,'') <> '' 
+                  and investment = 1
 )
 select * from totals where ifnull($datagrid,'') <> ''
+union 
+select * from investments where ifnull($datagrid,'') <> ''
 ;

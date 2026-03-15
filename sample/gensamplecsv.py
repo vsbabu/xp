@@ -1,8 +1,8 @@
 # /// script
-# requires-python = ">=3.13"
+# requires-python = '>=3.13'
 # dependencies = [
-#     "faker",
-#     "pandas[excel]",
+#     'faker',
+#     'pandas[excel]',
 # ]
 # ///
 import pandas as pd
@@ -15,22 +15,22 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
 
     Faker.seed(0)
     fake = Faker()
-    account_provider = DynamicProvider(provider_name="account",
-        elements=["Cash", "CreditCard", "SavingsBank", "CheckingAccount"],
+    account_provider = DynamicProvider(provider_name='account',
+        elements=['Cash', 'CreditCard', 'SavingsBank', 'CheckingAccount'],
     )
-    expense_provider = DynamicProvider(provider_name="expense",
-        elements=["Dinner", "Grocery", "Insurance", "Fuel", "Tax", "Books", "School", "Internet", "Telephone", "House", "Hire"],
+    expense_provider = DynamicProvider(provider_name='expense',
+        elements=['Dinner', 'Grocery', 'Insurance', 'Fuel', 'Tax', 'Books', 'School', 'Internet', 'Telephone', 'House', 'Hire'],
     )
-    hire_provider = DynamicProvider(provider_name="hire",
-        elements=["Cab", "Cleaning", "Accountant", "Driver"],
+    hire_provider = DynamicProvider(provider_name='hire',
+        elements=['Cab', 'Cleaning', 'Accountant', 'Driver'],
     )
-    income_provider = DynamicProvider(provider_name="income",
-        elements=["Salary", "Interest"],
+    income_provider = DynamicProvider(provider_name='income',
+        elements=['Salary', 'Interest'],
     )
     fake.add_provider(account_provider)
     fake.add_provider(income_provider)
@@ -69,14 +69,15 @@ if __name__ == "__main__":
 
     df = pd.DataFrame(data)
     df.dropna(inplace=True)
-    df["dt"] = pd.to_datetime(df.dt)
+    df['dt'] = pd.to_datetime(df.dt)
     #These following aren't really used in the dashboards, but 
     #keeping it precalculated for future use.
-    df["quarter"] = df.dt.dt.quarter
-    df["month"] = df.dt.dt.month
-    df["day"] = df.dt.dt.strftime("%a")  # dayofweek gives an integer
+    df['quarter'] = df.dt.dt.quarter
+    df['month'] = df.dt.dt.month
+    df['day'] = df.dt.dt.strftime('%a')  # dayofweek gives an integer
+    df['investment'] = 0 #placeholder flag to mark record as investment
     df.sort_values(by=['dt'],inplace=True)
-    df.set_index("id", inplace=True)
-    df.to_csv("sample.csv")
-    logger.info("%80s %6d" % ("TOTAL:", len(df.index)))
+    df.set_index('id', inplace=True)
+    df.to_csv('sample.csv')
+    logger.info('%80s %6d' % ('TOTAL:', len(df.index)))
 
