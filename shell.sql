@@ -21,7 +21,9 @@ years as (
   'FY '||strftime('%Y',date(b.min_yr||'-04-01', '+'||s.number||' year')) ||
     '-'|| strftime('%Y',date(b.min_yr||'-03-31', '+'||(s.number+1)||' year')) as title,
   date(b.min_yr||'-04-01', '+'||s.number||' year') as start,
-  date(b.min_yr||'-03-31', '+'||(s.number+1)||' year') as end
+  date(b.min_yr||'-03-31', '+'||(s.number+1)||' year') as end,
+  date(b.min_yr||'-04-01', '+'||(s.number-1)||' year') as pstart,
+  date(b.min_yr||'-03-31', '+'||s.number||' year') as pend
   FROM sequence s, bounds b
   WHERE date(b.min_yr||'-03-31', '+'||(s.number+1)||' year') <= date(b.fy_end_year||'-03-31')
   union
@@ -29,7 +31,9 @@ years as (
   s.number + 2 + 1 as o,
   strftime('%Y',date(b.max_yr||'-01-01', '-'||s.number||' year')) as title,
   date(b.max_yr||'-01-01', '-'||s.number||' year') as start,
-  date(b.max_yr||'-12-31', '-'||s.number||' year') as end
+  date(b.max_yr||'-12-31', '-'||s.number||' year') as end,
+  date(b.max_yr||'-01-01', '-'||(s.number+1)||' year') as pstart,
+  date(b.max_yr||'-12-31', '-'||(s.number+1)||' year') as pend
   FROM sequence s, bounds b
   WHERE date(b.max_yr||'-01-01', '-'||s.number||' year') >= date(b.min_yr||'-01-01')
   order by 2 desc
@@ -37,7 +41,7 @@ years as (
 submenu_yr as (
   SELECT json_group_array(json_object(
   'title', title,
-  'link', '/?t='||title||'&start='||start||'&end='||end
+  'link', '/?t='||title||'&start='||start||'&end='||end||'&pstart='||pstart||'&pend='||pend
   )) as sm from years
 ),
 qtrs as (
@@ -47,19 +51,24 @@ select
     cast((strftime('%m',date(current_date, '-'||(3*s.number)||' months'))+2)/3 as integer) as qtr
   , date(strftime('%Y-'||substr('00'||(3*(cast((strftime('%m',date(current_date, '-'||(3*s.number)||' months'))+2)/3 as integer)-1)+1), -2)||'-01', date(current_date, '-'||(3*s.number)||' months'))) as start
   , date(strftime('%Y-'||substr('00'||(3*(cast((strftime('%m',date(current_date, '-'||(3*s.number)||' months'))+2)/3 as integer)-1)+1), -2)||'-01', date(current_date, '-'||(3*s.number)||' months')), '+95 days', 'start of month', '-1 day') as end
+  , date(strftime('%Y-'||substr('00'||(3*(cast((strftime('%m',date(current_date, '-'||(3*s.number)||' months'))+2)/3 as integer)-1)+1), -2)||'-01', date(current_date, '-'||(3*s.number)||' months')),'-3 months') as pstart
+  , date(strftime('%Y-'||substr('00'||(3*(cast((strftime('%m',date(current_date, '-'||(3*s.number)||' months'))+2)/3 as integer)-1)+1), -2)||'-01', date(current_date, '-'||(3*s.number)||' months')),'-3 months', '+95 days', 'start of month', '-1 day') as pend
   from sequence s
 ),
 submenu_qtr as (
   SELECT json_group_array(json_object(
   'title', qtr,
-    'link', '/?t='||qtr||'&start='||start||'&end='||end
+    'link', '/?t='||qtr||'&start='||start||'&end='||end||'&pstart='||pstart||'&pend='||pend
+
   )) as sm from qtrs
 ),
 months as (
   SELECT
   strftime('%Y-%m', current_date, 'start of month', '-'||(s.number)||' month' ) as title,
   date(current_date, 'start of month', '-'||s.number||' month') as start,
-  date(current_date, 'start of month', '-'||s.number||' month', '+1 month', '-1 day') as end
+  date(current_date, 'start of month', '-'||s.number||' month', '+1 month', '-1 day') as end,
+  date(current_date, 'start of month', '-'||(s.number+1)||' month') as pstart,
+  date(current_date, 'start of month', '-'||(s.number+1)||' month', '+1 month', '-1 day') as pend
   FROM sequence s, bounds b
   WHERE
   date('now', 'start of month', '-'||(s.number+1)||' month' ) >= b.min_dt
@@ -69,24 +78,36 @@ months as (
 submenu_month as (
   SELECT json_group_array(json_object(
   'title', title,
-  'link', '/?t='||title||'&start='||start||'&end='||end
+  'link', '/?t='||title||'&start='||start||'&end='||end||'&pstart='||pstart||'&pend='||pend
+
   )) as sm from months
 ),
 recents as (
-  SELECT 1 o, '3 months  (' || date(current_date, '-3 months') || ')' as title, date(current_date, '-3 months') as start,  current_date as end
+  SELECT 1 o, '3 months  (' || date(current_date, '-3 months') || ')' as title,
+        date(current_date, '-3 months') as start,  current_date as end,
+        date(current_date, '-6 months') as pstart,  date(current_date, '-3 months', '-1 day') as pend
   union
-  SELECT 2 o, '3 months»  (' || date(current_date, '-3 months', 'start of month') || ')' as title, date(current_date, '-3 months', 'start of month') as start,  current_date as end
+  SELECT 2 o, '3 months»  (' || date(current_date, '-3 months', 'start of month') || ')' as title,
+        date(current_date, '-3 months', 'start of month') as start,  current_date as end,
+        date(current_date, '-6 months', 'start of month') as pstart,  date(current_date, '-3 months', '-1 day') as pend
   union
-  SELECT 3 o, '6 months  (' || date(current_date, '-6 months') || ')' as title, date(current_date, '-6 months') as start,  current_date as end
+  SELECT 3 o, '6 months  (' || date(current_date, '-6 months') || ')' as title,
+        date(current_date, '-6 months') as start,  current_date as end,
+        date(current_date, '-12 months') as pstart,  date(current_date, '-6 months', '-1 day') as pend
   union
-  SELECT 4 o, '6 months»  (' || date(current_date, '-6 months', 'start of month') || ')' as title, date(current_date, '-6 months', 'start of month') as start,  current_date as end
+  SELECT 4 o, '6 months»  (' || date(current_date, '-6 months', 'start of month') || ')' as title,
+        date(current_date, '- months', 'start of month') as start,  current_date as end,
+        date(current_date, '-12 months', 'start of month') as pstart,  date(current_date, '-6 months', '-1 day') as pend
   union
-  SELECT 5 o, strftime('Year %Y', current_date) as title, date(current_date, 'start of year') as start,  current_date as end
+  SELECT 5 o, strftime('Year %Y', current_date) as title, 
+        date(current_date, 'start of year') as start,  current_date as end,
+        date(current_date, '-13 months', 'start of year') as pstart,  date(current_date, 'start of year', '-1 day') as pend
 ),
 submenu_recent as (
   SELECT json_group_array(json_object(
   'title', title,
-  'link', '/?t='||title||'&start='||start||'&end='||end
+  'link', '/?t='||title||'&start='||start||'&end='||end||'&pstart='||pstart||'&pend='||pend
+
   )) as sm from recents order by o
 )
 SELECT 'shell' AS component,
@@ -106,5 +127,5 @@ SELECT 'shell' AS component,
   {"title":"", "icon":"'||IIF(COALESCE(sqlpage.cookie('topsidebar'),'') = '', 'layout-sidebar-left-collapse', 'layout-navbar-collapse')||'","link":"/toggle_menu.sql"},
   {"title":"", "icon":"'||IIF(COALESCE(sqlpage.cookie('lightdarkstatus'),'') = '', 'moon-stars', 'sun-high')||'","link":"/toggle_theme.sql"}
   ]' AS menu_item,
-  '[XP](https://github.com/vsbabu/xp/) built with [SQLPage '||sqlpage.version()||'](https://sql-page.com/)'
+ '[XP](https://github.com/vsbabu/xp/) built with [SQLPage '||sqlpage.version()||'](https://sql-page.com/)'
 AS footer from submenu_month, submenu_qtr, submenu_yr, submenu_recent;

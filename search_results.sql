@@ -19,11 +19,31 @@ WHERE date(e.dt) BETWEEN
                       and x.category not in (select value as category from json_each($category))
     )
     and (($payee <> '' and exists (select 1 from payees where payee match $payee and id=e.id )) or ($payee = ''))
-    
+;
+
+drop table if exists filtered_p;
+create temporary table filtered_p AS select e.*
+from expense e
+WHERE date(e.dt) BETWEEN 
+-- NOTE This default calculation is incorrect in many instances. That is why this is calculated in  previous_range from menu 
+-- and passed from query string to index.sql to here. During custom search, these will be null and a best effort case is handled for ifnull.
+-- It will also me null for homepage landing which is current month to current date. That is the condition coded here for full previous month.
+    ifnull($pstart, date($start, concat('-',(julianday($end)-julianday($start))/30,' months'), 'start of month')) and
+    ifnull($pend,date($start, '-1 days'))
+  and e.category in (
+    select value as category from json_each($category) where $category <> '' and ifnull($exclude,'') = ''
+    union
+    select distinct(category) from expense where ifnull($category,'') = ''
+    union
+    select distinct(x.category) from expense x where $category <> '' and ifnull($exclude, '') <> ''
+                      and x.category not in (select value as category from json_each($category))
+    )
+    and (($payee <> '' and exists (select 1 from payees where payee match $payee and id=e.id )) or ($payee = ''))
 ;
 
 select 'title' as component,
   $t as contents;
+
 
 /** Show in/out/net only if both in and out are present. If not, just show the only one present */
 WITH x AS (select sum(payment) as payment, sum(deposit) as deposit from filtered WHERE category <> 'Transfer')
@@ -46,15 +66,19 @@ where (x.payment > 0 or  x.deposit > 0)
 
 WITH y AS (select sum(payment) as spayment, sum(deposit) as sdeposit, sum(net) as snet,
          sum(iif(payment>0, 1, 0)) as cpayment, sum(iif(deposit>0, 1, 0)) as cdeposit, count(1) as cnet,
-        cast(sum(payment)*100/sum(deposit) as integer) as expratio from filtered WHERE category <> 'Transfer')
+        cast(sum(payment)*100/sum(deposit) as integer) as expratio from filtered WHERE category <> 'Transfer' )
+     ,yp AS (select sum(payment) as spayment, sum(deposit) as sdeposit, sum(net) as snet from filtered_p WHERE category <> 'Transfer' )
+     ,yinvest AS ( select count(f.net) as cnet, sum(f.net) as snet from filtered f where f.investment = 1 having count(f.net) > 0 )
+     ,ypinvest AS ( select count(f.net) as cnet, sum(f.net) as snet from filtered_p f where f.investment = 1 having count(f.net) > 0 )
 select
     1 as d,
     'In ('||y.cdeposit||')' as title,
     printf('₹%,.2f',y.sdeposit) as value,
     ''       as unit,
     iif(y.sdeposit > 0, 'green', 'gray') as color,
-    '' as progress_percent, '' as progress_color
-from y
+    '' as progress_percent, '' as progress_color,
+    round((y.sdeposit-yp.sdeposit)*100/yp.sdeposit, 2) as change_percent
+from y, yp
 where y.sdeposit > 0
 union
 select
@@ -63,8 +87,9 @@ select
     printf('₹%,.2f',y.spayment) as value,
     ''       as unit,
     iif(y.spayment > 0, 'red', 'gray') as color,
-    '' as progress_percent, '' as progress_color
-from y
+    '' as progress_percent, '' as progress_color,
+    round((y.spayment-yp.spayment)*100/yp.spayment, 2) as change_percent
+from y, yp
 where y.spayment > 0
 union
 select
@@ -79,22 +104,24 @@ select
       when y.expratio > 70 then 'warning'
       when y.expratio > 50 then 'yellow'
       else 'success'
-    end as progress_color
-from y
-where y.spayment > 0 and y.sdeposit > 0
+    end as progress_color,
+    round((y.snet-yp.snet)*100/yp.snet, 2) as change_percent
+from y, yp
+where y.spayment > 0 and yp.sdeposit > 0
 union
 select
     4 as d,
-    'Invest ('||count(f.net)||')' as title,
-    printf('₹%,.2f',sum(f.net)) as value, 
+    'Invest ('||yinvest.cnet||')' as title,
+    printf('₹%,.2f',yinvest.snet) as value, 
     ''       as unit,
     'lime' as color,
     '' as progress_percent,
-    '' as progress_color
-from filtered f
-where f.investment = 1
-having count(f.net) > 0
+    '' as progress_color,
+    round((yinvest.snet-ypinvest.snet)*100/ypinvest.snet, 2) as change_percent
+from yinvest, ypinvest
 ;
+
+select 'debug' as component, min(e.dt) as st, max(e.dt) as en, count(1) as c, sum(deposit) as sd from filtered_p as e;
 
 SELECT
   'chart' as component,
