@@ -121,8 +121,6 @@ select
 from yinvest, ypinvest
 ;
 
-select 'debug' as component, min(e.dt) as st, max(e.dt) as en, count(1) as c, sum(deposit) as sd from filtered_p as e;
-
 SELECT
   'chart' as component,
   'Net(K)' as title,
