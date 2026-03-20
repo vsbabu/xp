@@ -19,7 +19,7 @@ select
 select 
     'alert'                     as component,
     'Warning'                   as title,
-    'Note that about 1 min may be needed to load 10K records. Wait!' as description,
+    'Note that about 2 minutes may be needed to load 10K records. There is no progress bar and database will be locked. Please wait till you  get a completion message!' as description,
     'alert-triangle'            as icon,
     'yellow'                    as color;
 

@@ -14,6 +14,7 @@ copy expense(id
   ,quarter
   ,month
   ,day
+  ,investment
 ) from 'expense_data_input'
 with (header true, delimiter ',', quote '"')
 ;
