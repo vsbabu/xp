@@ -24,13 +24,13 @@ if __name__ == '__main__':
         elements=['Cash', 'CreditCard', 'SavingsBank', 'CheckingAccount'],
     )
     expense_provider = DynamicProvider(provider_name='expense',
-        elements=['Dinner', 'Grocery', 'Insurance', 'Fuel', 'Tax', 'Books', 'School', 'Internet', 'Telephone', 'House', 'Hire'],
+        elements=['Dinner', 'Grocery', 'Insurance', 'Fuel', 'Tax', 'Books', 'School', 'Internet', 'Telephone', 'House', 'Hire', 'Investment'],
     )
     hire_provider = DynamicProvider(provider_name='hire',
         elements=['Cab', 'Cleaning', 'Accountant', 'Driver'],
     )
     income_provider = DynamicProvider(provider_name='income',
-        elements=['Salary', 'Interest'],
+        elements=['Salary', 'Interest', 'Dividend'],
     )
     fake.add_provider(account_provider)
     fake.add_provider(income_provider)
@@ -75,7 +75,8 @@ if __name__ == '__main__':
     df['quarter'] = df.dt.dt.quarter
     df['month'] = df.dt.dt.month
     df['day'] = df.dt.dt.strftime('%a')  # dayofweek gives an integer
-    df['investment'] = 0 #placeholder flag to mark record as investment
+    df['investment'] = 0  #placeholder flag to mark record as investment
+    df.loc[df['category']=='Investment', 'investment'] = 1
     df.sort_values(by=['dt'],inplace=True)
     df.set_index('id', inplace=True)
     df.to_csv('sample.csv')
