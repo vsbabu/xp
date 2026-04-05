@@ -1,6 +1,6 @@
 -- temporary table is session specific; so no collitions and is autodropped after the session is closed.
 -- this reduces the query code length a lot.
--- sqlpage closes the session AFTER a request is served. 
+-- sqlpage closes the session AFTER a request is served.
 -- Quick refresh fails at create temporary table. That is because
 -- connection is reused from the pool, but session is different.
 -- We can safely drop if exists without impacting concurrent series
@@ -8,7 +8,7 @@
 drop table if exists filtered;
 create temporary table filtered AS select e.*
 from expense e
-WHERE date(e.dt) BETWEEN 
+WHERE date(e.dt) BETWEEN
     date($start) and date($end)
   and e.category in (
     select value as category from json_each($category) where $category <> '' and ifnull($exclude,'') = ''
@@ -24,12 +24,7 @@ WHERE date(e.dt) BETWEEN
 drop table if exists filtered_p;
 create temporary table filtered_p AS select e.*
 from expense e
-WHERE date(e.dt) BETWEEN 
--- NOTE This default calculation is incorrect in many instances. That is why this is calculated in  previous_range from menu 
--- and passed from query string to index.sql to here. During custom search, these will be null and a best effort case is handled for ifnull.
--- It will also me null for homepage landing which is current month to current date. That is the condition coded here for full previous month.
-    ifnull($pstart, date($start, concat('-',(julianday($end)-julianday($start))/30,' months'), 'start of month')) and
-    ifnull($pend,date($start, '-1 days'))
+WHERE date(e.dt) BETWEEN $pstart and $pend
   and e.category in (
     select value as category from json_each($category) where $category <> '' and ifnull($exclude,'') = ''
     union
@@ -44,6 +39,10 @@ WHERE date(e.dt) BETWEEN
 select 'title' as component,
   $t as contents;
 
+/*
+select
+    'debug' as component, $start as st, $end as en, $pstart as ps, $pend as pe;
+*/
 
 /** Show in/out/net only if both in and out are present. If not, just show the only one present */
 WITH x AS (select sum(payment) as payment, sum(deposit) as deposit from filtered WHERE category <> 'Transfer')
@@ -52,7 +51,7 @@ select
     4                     as columns,
     'colorfull_dashboard' as id
 from x
-where x.payment > 0 
+where x.payment > 0
   and x.deposit > 0
 union
 select
@@ -95,7 +94,7 @@ union
 select
     3 as d,
     'Net ('||y.cnet||')' as title,
-    printf('₹%,.2f',y.snet) as value, 
+    printf('₹%,.2f',y.snet) as value,
     ''       as unit,
     iif(y.snet > 0, 'cyan', 'pink') as color,
     y.expratio as progress_percent,
@@ -112,7 +111,7 @@ union
 select
     4 as d,
     'Invest ('||yinvest.cnet||')' as title,
-    printf('₹%,.2f',yinvest.snet) as value, 
+    printf('₹%,.2f',yinvest.snet) as value,
     ''       as unit,
     'lime' as color,
     '' as progress_percent,
@@ -120,6 +119,7 @@ select
     round((yinvest.snet-ypinvest.snet)*100/ypinvest.snet, 2) as change_percent
 from yinvest, ypinvest
 ;
+
 
 SELECT
   'chart' as component,
@@ -176,7 +176,7 @@ GROUP BY 1
 ORDER BY 3 asc, 1 asc
 ;
 
-select 
+select
     'chart'   as component,
     'treemap' as type,
     'Net(K) Split' as title,
@@ -193,7 +193,7 @@ ORDER BY 1 asc
 ;
 
 -- FIXME: This shows no category values, for 2026-Q1 on feb 26th. Future empty ranges is NOT the problem
-select 'chart' as component, 
+select 'chart' as component,
     'By Category' as title,
     'bar' as type,
     'month' as xtitle,
@@ -202,18 +202,18 @@ select 'chart' as component,
     true as time,
     500 as height
 ;
-select category as series, 
+select category as series,
     -- change to group by days if range is up to 2 months
     iif(julianday($end)-julianday($start)>60,
     strftime('%Y-%m', date(dt)),
     strftime('%Y-%m-%d', date(dt))) as label,
-  cast(sum(net)/1 as integer) as value 
+  cast(sum(net)/1 as integer) as value
 FROM filtered
 where category <> 'Transfer'
 group by 1, 2
 order by  1,2 ;
 
-SELECT 
+SELECT
     'table' as component
   , TRUE    as sort
   , FALSE   as search
@@ -236,9 +236,9 @@ SELECT
   ,'fri'    as monospace
   ,'sat'    as monospace
 ;
-WITH RECURSIVE 
+WITH RECURSIVE
 params AS (SELECT date($start) as begin_cal, date($end) as end_cal),
-  bounds AS (SELECT begin_cal, end_cal, 
+  bounds AS (SELECT begin_cal, end_cal,
               date(begin_cal, 'weekday 0', '-7 days') begin_sun,
               date(end_cal, 'weekday 6') end_sat FROM params),
   all_dates AS (
@@ -252,7 +252,7 @@ params AS (SELECT date($start) as begin_cal, date($end) as end_cal),
   ),
   metric AS (
     /* THIS IS YOUR CTE FOR GETTING METRICS */
-    SELECT 
+    SELECT
     date(x.dt) AS dt, sum(x.net) as val FROM params p, filtered x
     WHERE date(x.dt) BETWEEN p.begin_cal AND p.end_cal
       and x.category <> 'Transfer'
@@ -296,9 +296,9 @@ select
     'azure'              as color,
     'azure'              as color
 ;
-WITH RECURSIVE 
+WITH RECURSIVE
 params AS (SELECT date($start) as begin_cal, date($end) as end_cal),
-  bounds AS (SELECT begin_cal, end_cal, 
+  bounds AS (SELECT begin_cal, end_cal,
               date(begin_cal, 'weekday 0', '-7 days') begin_sun,
               date(end_cal, 'weekday 6') end_sat FROM params),
   all_dates AS (
@@ -311,8 +311,8 @@ params AS (SELECT date($start) as begin_cal, date($end) as end_cal),
   FROM bounds, all_dates where  dt < bounds.end_sat
   ),
   metric AS (
-    -- THIS IS YOUR CTE FOR GETTING METRICS 
-    SELECT 
+    -- THIS IS YOUR CTE FOR GETTING METRICS
+    SELECT
     date(x.dt) AS dt, sum(x.net) as val FROM params p, filtered x
     WHERE date(x.dt) BETWEEN p.begin_cal AND p.end_cal
       and x.category <> 'Transfer'
@@ -375,7 +375,7 @@ select dt as 'Date'
 from filtered where ifnull($datagrid,'') <> ''
 ;
 with totals as (
-  -- wrapping this in a CTE because this will always return a row 
+  -- wrapping this in a CTE because this will always return a row
   -- using CTE outside with another where class will suppress that row
   -- when not needed.
   select 'Total' as 'Date'
@@ -387,7 +387,7 @@ with totals as (
     , sum(net) as net
     , TRUE      as _sqlpage_footer
     , iif(sum(iif(net>0, net, 0))>0, 'green', 'red') as _sqlpage_color
-  from filtered where ifnull($datagrid,'') <> '' 
+  from filtered where ifnull($datagrid,'') <> ''
     and category <> 'Transfer' -- transfer bloats  pay/deposit columns on sum
 ),
 investments as (
@@ -400,10 +400,10 @@ investments as (
     , sum(net) as net
     , TRUE      as _sqlpage_footer
     , iif(sum(iif(net>0, net, 0))>0, 'lime', 'pink') as _sqlpage_color
-  from filtered where ifnull($datagrid,'') <> '' 
+  from filtered where ifnull($datagrid,'') <> ''
                   and investment = 1
 )
 select * from totals where ifnull($datagrid,'') <> ''
-union 
+union
 select * from investments where ifnull($datagrid,'') <> ''
 ;
