@@ -21,9 +21,17 @@ years as (
   'FY '||strftime('%Y',date(b.min_yr||'-04-01', '+'||s.number||' year')) ||
     '-'|| strftime('%Y',date(b.min_yr||'-03-31', '+'||(s.number+1)||' year')) as title,
   date(b.min_yr||'-04-01', '+'||s.number||' year') as start,
-  date(b.min_yr||'-03-31', '+'||(s.number+1)||' year') as end,
+  iif (
+    date(b.min_yr||'-03-31', '+'||(s.number+1)||' year') >= current_date,
+    current_date,
+    date(b.min_yr||'-03-31', '+'||(s.number+1)||' year')
+    ) as end,
   date(b.min_yr||'-04-01', '+'||(s.number-1)||' year') as pstart,
-  date(b.min_yr||'-03-31', '+'||s.number||' year') as pend
+  iif (
+    date(b.min_yr||'-03-31', '+'||(s.number+1)||' year') >= current_date,
+    date(current_date, '-1 years'),
+    date(b.min_yr||'-03-31', '+'||s.number||' year')
+    ) as pend
   FROM sequence s, bounds b
   WHERE date(b.min_yr||'-03-31', '+'||(s.number+1)||' year') <= date(b.fy_end_year||'-03-31')
   union
@@ -31,9 +39,17 @@ years as (
   s.number + 2 + 1 as o,
   strftime('%Y',date(b.max_yr||'-01-01', '-'||s.number||' year')) as title,
   date(b.max_yr||'-01-01', '-'||s.number||' year') as start,
-  date(b.max_yr||'-12-31', '-'||s.number||' year') as end,
+  iif( 
+    date(b.max_yr||'-12-31', '-'||s.number||' year') >= current_date,
+    current_date,
+    date(b.max_yr||'-12-31', '-'||s.number||' year')
+    ) as end,
   date(b.max_yr||'-01-01', '-'||(s.number+1)||' year') as pstart,
-  date(b.max_yr||'-12-31', '-'||(s.number+1)||' year') as pend
+  iif( 
+    date(b.max_yr||'-12-31', '-'||s.number||' year') >= current_date,
+    date(current_date, '-1 years'),
+    date(b.max_yr||'-12-31', '-'||(s.number+1)||' year')
+    ) as pend
   FROM sequence s, bounds b
   WHERE date(b.max_yr||'-01-01', '-'||s.number||' year') >= date(b.min_yr||'-01-01')
   order by 2 desc
@@ -50,9 +66,17 @@ select
   strftime('%Y-Q',date(current_date, '-'||(3*s.number)||' months'))||
     cast((strftime('%m',date(current_date, '-'||(3*s.number)||' months'))+2)/3 as integer) as qtr
   , date(strftime('%Y-'||substr('00'||(3*(cast((strftime('%m',date(current_date, '-'||(3*s.number)||' months'))+2)/3 as integer)-1)+1), -2)||'-01', date(current_date, '-'||(3*s.number)||' months'))) as start
-  , date(strftime('%Y-'||substr('00'||(3*(cast((strftime('%m',date(current_date, '-'||(3*s.number)||' months'))+2)/3 as integer)-1)+1), -2)||'-01', date(current_date, '-'||(3*s.number)||' months')), '+95 days', 'start of month', '-1 day') as end
+  , iif (
+      date(strftime('%Y-'||substr('00'||(3*(cast((strftime('%m',date(current_date, '-'||(3*s.number)||' months'))+2)/3 as integer)-1)+1), -2)||'-01', date(current_date, '-'||(3*s.number)||' months')), '+95 days', 'start of month', '-1 day') >= current_date,
+      current_date,
+      date(strftime('%Y-'||substr('00'||(3*(cast((strftime('%m',date(current_date, '-'||(3*s.number)||' months'))+2)/3 as integer)-1)+1), -2)||'-01', date(current_date, '-'||(3*s.number)||' months')), '+95 days', 'start of month', '-1 day')
+      ) as end
   , date(strftime('%Y-'||substr('00'||(3*(cast((strftime('%m',date(current_date, '-'||(3*s.number)||' months'))+2)/3 as integer)-1)+1), -2)||'-01', date(current_date, '-'||(3*s.number)||' months')),'-3 months') as pstart
-  , date(strftime('%Y-'||substr('00'||(3*(cast((strftime('%m',date(current_date, '-'||(3*s.number)||' months'))+2)/3 as integer)-1)+1), -2)||'-01', date(current_date, '-'||(3*s.number)||' months')),'-3 months', '+95 days', 'start of month', '-1 day') as pend
+  , iif (
+      date(strftime('%Y-'||substr('00'||(3*(cast((strftime('%m',date(current_date, '-'||(3*s.number)||' months'))+2)/3 as integer)-1)+1), -2)||'-01', date(current_date, '-'||(3*s.number)||' months')), '+95 days', 'start of month', '-1 day') >= current_date,
+      date(current_date, '-3 months'),
+      date(strftime('%Y-'||substr('00'||(3*(cast((strftime('%m',date(current_date, '-'||(3*s.number)||' months'))+2)/3 as integer)-1)+1), -2)||'-01', date(current_date, '-'||(3*s.number)||' months')),'-3 months', '+95 days', 'start of month', '-1 day')
+    ) as pend
   from sequence s
 ),
 submenu_qtr as (
@@ -66,9 +90,17 @@ months as (
   SELECT
   strftime('%Y-%m', current_date, 'start of month', '-'||(s.number)||' month' ) as title,
   date(current_date, 'start of month', '-'||s.number||' month') as start,
-  date(current_date, 'start of month', '-'||s.number||' month', '+1 month', '-1 day') as end,
+  iif (
+    date(current_date, 'start of month', '-'||s.number||' month', '+1 month', '-1 day') >= current_date,
+    current_date,
+    date(current_date, 'start of month', '-'||s.number||' month', '+1 month', '-1 day')
+    ) as end,
   date(current_date, 'start of month', '-'||(s.number+1)||' month') as pstart,
-  date(current_date, 'start of month', '-'||(s.number+1)||' month', '+1 month', '-1 day') as pend
+  iif (
+    date(current_date, 'start of month', '-'||s.number||' month', '+1 month', '-1 day') >= current_date,
+    date(current_date, '-1 months'),
+    date(current_date, 'start of month', '-'||(s.number+1)||' month', '+1 month', '-1 day')
+    ) as pend
   FROM sequence s, bounds b
   WHERE
   date('now', 'start of month', '-'||(s.number+1)||' month' ) >= b.min_dt
