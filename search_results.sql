@@ -120,7 +120,6 @@ select
 from yinvest, ypinvest
 ;
 
-
 SELECT
   'chart' as component,
   'Net(K)' as title,
@@ -177,6 +176,11 @@ ORDER BY 3 asc, 1 asc
 ;
 
 select
+    'divider' as component,
+    'By Category'   as contents,
+    TRUE  as bold;
+
+select
     'chart'   as component,
     'treemap' as type,
     'Net(K) Split' as title,
@@ -212,6 +216,89 @@ FROM filtered
 where category <> 'Transfer'
 group by 1, 2
 order by  1,2 ;
+
+SELECT
+    'table' as component
+  , TRUE    as sort
+  , FALSE   as search
+  , TRUE    as striped_rows
+  , FALSE    as striped_columns
+  , 'INR'   as currency
+  , 'amount_table' as class;
+WITH RECURSIVE
+params AS (SELECT date($start) as begin_cal, date($end) as end_cal),
+  bounds AS (SELECT begin_cal, end_cal,
+              date(begin_cal, 'start of month') as begin_month,
+              date(end_cal,'+1 month', 'start of month', '-1 day') as end_month,
+              date(begin_cal, 'weekday 0', '-7 days') begin_sun,
+              date(end_cal, 'weekday 6') end_sat
+  FROM params),
+  categories AS (SELECT distinct x.category AS category FROM params p, filtered x
+            WHERE date(x.dt) BETWEEN p.begin_cal AND p.end_cal
+            AND x.category <> 'Transfer' ORDER BY 1),
+  weeks AS ( -- weeks can be used if needed
+    SELECT strftime('%Y-%U', begin_sun) as week, begin_sun dt
+    FROM bounds
+     UNION ALL
+    SELECT
+        strftime('%Y-%U', date(dt, '+7 day')) as week,
+        date(dt, '+7 day') dt
+  FROM bounds, weeks where  dt < date(bounds.end_sat, '-8 days')
+  ),
+  months AS (
+      SELECT strftime('%Y-%m', begin_month) as month, begin_month dt
+      FROM bounds
+       UNION ALL
+      SELECT
+          strftime('%Y-%m', date(dt, '+1 month')) as month,
+          date(dt, '+1 month') dt
+    FROM bounds, months where  dt < date(bounds.end_cal, 'start of month')
+    ),
+  metricw AS (
+      SELECT
+          weeks.week, weeks.dt, categories.category,
+          (select coalesce(sum(x.net), 0) from filtered x where strftime('%Y-%U', date(x.dt))=weeks.week and x.category=categories.category) as val
+      FROM weeks CROSS JOIN categories
+      WHERE (julianday($end) - julianday($start)) < 60 -- optimization to ignore this costly query
+      ORDER BY weeks.week, categories.category
+  ),
+  metricm AS (
+      SELECT
+          months.month, months.dt, categories.category,
+          (select coalesce(sum(x.net), 0) from filtered x where strftime('%Y-%m', date(x.dt, 'start of month'))=months.month and x.category=categories.category) as val
+      FROM months CROSS JOIN categories
+      WHERE (julianday($end) - julianday($start)) > 60 -- optimization to ignore this costly query
+      ORDER BY months.month, categories.category
+  )
+  -- DONE: color negative. Only at row level possible.
+  -- DONE: monospace. In custom css
+  -- DONE: right aligned. In custom css
+  -- TODO: null for zero
+  SELECT 'dynamic' AS component,
+    JSON_PATCH(
+      JSON_OBJECT('month', month),
+      JSON_PATCH(
+        JSON_GROUP_OBJECT(category, printf('₹%,.0f',val)),
+        JSON_OBJECT('_sqlpage_color', if(sum(val)>=0, 'teal','orange')))
+      ) AS properties from metricm
+  GROUP BY month
+    HAVING  (julianday($end) - julianday($start)) > 60 -- not needed due to optimization before
+  UNION
+  SELECT 'dynamic' AS component,
+    JSON_PATCH(
+      JSON_OBJECT('week', dt),
+       JSON_PATCH(
+        JSON_GROUP_OBJECT(category, printf('₹%,.0f',val)),
+        JSON_OBJECT('_sqlpage_color', if(sum(val)>=0, 'teal','orange')))
+      ) AS properties from metricw
+  GROUP BY week
+    HAVING (julianday($end) - julianday($start)) < 60 -- not needed due to optimization before
+;
+
+select
+    'divider' as component,
+    'By Weekday'   as contents,
+    TRUE  as bold;
 
 SELECT
     'table' as component

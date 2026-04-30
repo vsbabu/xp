@@ -39,13 +39,13 @@ years as (
   s.number + 2 + 1 as o,
   strftime('%Y',date(b.max_yr||'-01-01', '-'||s.number||' year')) as title,
   date(b.max_yr||'-01-01', '-'||s.number||' year') as start,
-  iif( 
+  iif(
     date(b.max_yr||'-12-31', '-'||s.number||' year') >= current_date,
     current_date,
     date(b.max_yr||'-12-31', '-'||s.number||' year')
     ) as end,
   date(b.max_yr||'-01-01', '-'||(s.number+1)||' year') as pstart,
-  iif( 
+  iif(
     date(b.max_yr||'-12-31', '-'||s.number||' year') >= current_date,
     date(current_date, '-1 years'),
     date(b.max_yr||'-12-31', '-'||(s.number+1)||' year')
@@ -131,7 +131,7 @@ recents as (
         date(current_date, '- months', 'start of month') as start,  current_date as end,
         date(current_date, '-12 months', 'start of month') as pstart,  date(current_date, '-6 months', '-1 day') as pend
   union
-  SELECT 5 o, strftime('Year %Y', current_date) as title, 
+  SELECT 5 o, strftime('Year %Y', current_date) as title,
         date(current_date, 'start of year') as start,  current_date as end,
         date(current_date, '-13 months', 'start of year') as pstart,  date(current_date, 'start of year', '-1 day') as pend
 ),
@@ -145,7 +145,8 @@ submenu_recent as (
 SELECT 'shell' AS component,
 	'XP' AS title, 'assets/favicon.ico' as favicon,
   'assets/favicon.ico' as image,
-  'fluid' as layout, 
+  'custom_styles.css' as css,
+  'fluid' as layout,
 	IIF(COALESCE(sqlpage.cookie('topsidebar'),'') = '', false, true) as sidebar,
 	sqlpage.cookie('lightdarkstatus') AS theme,
 	'/' AS link,
