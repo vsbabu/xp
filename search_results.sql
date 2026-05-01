@@ -273,6 +273,7 @@ params AS (SELECT date($start) as begin_cal, date($end) as end_cal),
   -- DONE: color negative. Only at row level possible.
   -- DONE: monospace. In custom css
   -- DONE: right aligned. In custom css
+  -- DONE: added total row
   -- TODO: null for zero
   SELECT 'dynamic' AS component,
     JSON_PATCH(
@@ -282,7 +283,16 @@ params AS (SELECT date($start) as begin_cal, date($end) as end_cal),
         JSON_OBJECT('_sqlpage_color', if(sum(val)>=0, 'teal','orange')))
       ) AS properties from metricm
   GROUP BY month
-    HAVING  (julianday($end) - julianday($start)) > 60 -- not needed due to optimization before
+    HAVING  (julianday($end) - julianday($start)) > 60 -- To hide row completely
+  UNION
+  SELECT 'dynamic' AS component,
+    JSON_PATCH(
+      JSON_OBJECT('month', 'Total'),
+      JSON_PATCH(
+        JSON_GROUP_OBJECT(category, printf('₹%,.0f',val)),
+        JSON_OBJECT('_sqlpage_color', if(sum(val)>=0, 'teal','orange')))
+      ) AS properties FROM (select category, sum(val) as val from metricm group by category)
+    GROUP BY component HAVING (julianday($end) - julianday($start)) > 60 -- To hide row completely
   UNION
   SELECT 'dynamic' AS component,
     JSON_PATCH(
@@ -292,7 +302,16 @@ params AS (SELECT date($start) as begin_cal, date($end) as end_cal),
         JSON_OBJECT('_sqlpage_color', if(sum(val)>=0, 'teal','orange')))
       ) AS properties from metricw
   GROUP BY week
-    HAVING (julianday($end) - julianday($start)) < 60 -- not needed due to optimization before
+    HAVING (julianday($end) - julianday($start)) < 60 -- To hide row completely
+    UNION
+    SELECT 'dynamic' AS component,
+      JSON_PATCH(
+        JSON_OBJECT('week', 'Total'),
+        JSON_PATCH(
+          JSON_GROUP_OBJECT(category, printf('₹%,.0f',val)),
+          JSON_OBJECT('_sqlpage_color', if(sum(val)>=0, 'teal','orange')))
+        ) AS properties FROM (select category, sum(val) as val from metricw group by category)
+    GROUP BY component HAVING (julianday($end) - julianday($start)) < 60 -- To hide row completely
 ;
 
 select
