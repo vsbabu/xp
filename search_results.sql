@@ -348,7 +348,7 @@ params AS (SELECT date($start) as begin_cal, date($end) as end_cal),
     SELECT ad.week, ad.dt, m.val, iif(m.val is null, null, printf('₹%,.0f', m.val)) as sval from all_dates ad LEFT JOIN metric  m
     ON ad.dt = m.dt
   )
-  SELECT adm.dt as week, printf('₹%,.0f',sum(adm.val)) as total
+  SELECT min(adm.dt) as week, printf('₹%,.0f',sum(adm.val)) as total
     -- this max is just to pick one value out of join; and all values will be same - one can use min too.
   , max(iif('0'=strftime('%w',adm.dt), adm.sval, null)) sun
   , max(iif('1'=strftime('%w',adm.dt), adm.sval, null)) mon
