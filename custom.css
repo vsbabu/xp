@@ -1,0 +1,11 @@
+.amount_table th {
+    text-align: right;
+}
+.amount_table td {
+    text-align: right;
+    font-family: monospace;
+}
+.amount_table td:first-child,
+.amount_table th:first-child {
+    text-align: left;
+}

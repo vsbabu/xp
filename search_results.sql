@@ -270,11 +270,6 @@ params AS (SELECT date($start) as begin_cal, date($end) as end_cal),
       WHERE (julianday($end) - julianday($start)) > 60 -- optimization to ignore this costly query
       ORDER BY months.month, categories.category
   )
-  -- DONE: color negative. Only at row level possible.
-  -- DONE: monospace. In custom css
-  -- DONE: right aligned. In custom css
-  -- DONE: added total row
-  -- TODO: null for zero
   SELECT 'dynamic' AS component,
     JSON_PATCH(
       JSON_OBJECT('month', month),
@@ -325,22 +320,7 @@ SELECT
   , FALSE   as search
   , TRUE    as striped_rows
   , 'INR'   as currency
-  ,'total'  as align_right
-  ,'sun'    as align_right
-  ,'mon'    as align_right
-  ,'tue'    as align_right
-  ,'wed'    as align_right
-  ,'thu'    as align_right
-  ,'fri'    as align_right
-  ,'sat'    as align_right
-  ,'total'  as monospace
-  ,'sun'    as monospace
-  ,'mon'    as monospace
-  ,'tue'    as monospace
-  ,'wed'    as monospace
-  ,'thu'    as monospace
-  ,'fri'    as monospace
-  ,'sat'    as monospace
+  , 'amount_table' as class
 ;
 WITH RECURSIVE
 params AS (SELECT date($start) as begin_cal, date($end) as end_cal),
@@ -368,7 +348,7 @@ params AS (SELECT date($start) as begin_cal, date($end) as end_cal),
     SELECT ad.week, ad.dt, m.val, iif(m.val is null, null, printf('₹%,.0f', m.val)) as sval from all_dates ad LEFT JOIN metric  m
     ON ad.dt = m.dt
   )
-  SELECT adm.week, min(adm.dt) as starting, printf('₹%,.0f',sum(adm.val)) as total
+  SELECT adm.dt as week, printf('₹%,.0f',sum(adm.val)) as total
     -- this max is just to pick one value out of join; and all values will be same - one can use min too.
   , max(iif('0'=strftime('%w',adm.dt), adm.sval, null)) sun
   , max(iif('1'=strftime('%w',adm.dt), adm.sval, null)) mon
