@@ -128,7 +128,7 @@ recents as (
         date(current_date, '-12 months') as pstart,  date(current_date, '-6 months', '-1 day') as pend
   union
   SELECT 4 o, '6 months»  (' || date(current_date, '-6 months', 'start of month') || ')' as title,
-        date(current_date, '- months', 'start of month') as start,  current_date as end,
+        date(current_date, '-6 months', 'start of month') as start,  current_date as end,
         date(current_date, '-12 months', 'start of month') as pstart,  date(current_date, '-6 months', '-1 day') as pend
   union
   SELECT 5 o, strftime('Year %Y', current_date) as title,
