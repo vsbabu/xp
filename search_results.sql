@@ -222,7 +222,8 @@ SELECT
   , TRUE    as sort
   , FALSE   as search
   , TRUE    as striped_rows
-  , FALSE    as striped_columns
+  , FALSE   as striped_columns
+  , TRUE    as freeze_headers
   , 'INR'   as currency
   , 'amount_table' as class;
 WITH RECURSIVE
@@ -319,6 +320,7 @@ SELECT
   , TRUE    as sort
   , FALSE   as search
   , TRUE    as striped_rows
+  , TRUE    as freeze_headers
   , 'INR'   as currency
   , 'amount_table' as class
 ;
@@ -360,6 +362,51 @@ params AS (SELECT date($start) as begin_cal, date($end) as end_cal),
   , iif(sum(adm.val)>=0, 'teal', 'orange') as _sqlpage_color
 FROM bounds, all_dates_metric adm
 GROUP BY adm.week
+;
+
+select
+    'divider' as component,
+    'Top 10 repeating merchants'   as contents,
+    TRUE  as bold
+from filtered where ifnull($payee,'') = '' limit 1; /* TODO: Why wouldn't $payee is null work? */
+
+select 'table' as component
+    , TRUE     as sort
+    , FALSE    as search
+    , TRUE     as freeze_headers
+    , TRUE     as striped_rows
+    , TRUE     as small
+    , 'INR'       as currency
+    , 'Net'       as align_right
+    , 'Net'       as money
+    , 'Net'       as monospace
+    , 'Payments'       as align_right
+    , 'Payments'       as monospace
+    , 'payee'     as monospace
+    , 'category'     as monospace
+    , JSON('{"name":"history","tooltip":"Show details","link":"' || sqlpage.link('index', JSON_OBJECT(
+                    'start', $start
+                    ,'end', $end
+                    ,'pstart', $pstart
+                    ,'pend', $pend
+                    ,'datagrid', 1
+                    )) ||'&payee={id}","icon":"history"}') as custom_actions
+   from filtered where ifnull($payee,'') = '' limit 1;
+   ;
+
+SELECT payee, GROUP_CONCAT(DISTINCT category ORDER BY category ASC) as category, COUNT(1) as Payments, SUM(net) as Net
+    , iif(sum(iif(net>0, net, 0))>0, 'teal', 'orange') as _sqlpage_color
+    , payee AS _sqlpage_id
+FROM filtered
+WHERE investment <> 1
+  AND category NOT IN ('Transfer', 'Reconcile')
+  AND net < 0
+  AND ifnull($payee,'') = ''
+GROUP BY payee
+HAVING COUNT(1) > 2
+ORDER BY SUM(net) asc
+LIMIT 10;
+
 ;
 /* Commented out: Heatmap is ugly to watch and not very useful as I imagined.
  * Still, leaving it here for future reference. Ideally, the cells should be much smaller
@@ -492,4 +539,3 @@ investments as (
 select * from totals where ifnull($datagrid,'') <> ''
 union
 select * from investments where ifnull($datagrid,'') <> ''
-;
