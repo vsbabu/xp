@@ -166,7 +166,7 @@ AS footer from submenu_month, submenu_qtr, submenu_yr, submenu_recent;
 
 select
     'modal'                as component,
-    'filter_form_modal'  as id,
-    'Refine Filter' as title,
+    'filter_form_modal'    as id,
+    'Refine Filter'        as title,
     TRUE                   as large,
     sqlpage.link('search_form', $ctx_json, '_sqlpage_embed') AS embed;

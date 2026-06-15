@@ -32,8 +32,8 @@ SET ctx_json  = json_object(
     'datagrid' , ifnull($datagrid, '')
   );
 
-  -- draw menu
-  SELECT 'dynamic' AS component, sqlpage.run_sql('shell.sql') AS properties;
+-- draw menu
+SELECT 'dynamic' AS component, sqlpage.run_sql('shell.sql') AS properties;
 
 -- create temp tables for the session - all query sql files below use these.
 SELECT 'dynamic' AS component, sqlpage.run_sql('r_add_temp_tables.sql', $ctx_json) AS properties;

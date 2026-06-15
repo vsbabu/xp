@@ -1,7 +1,8 @@
 SELECT
     'form' as component,
     'GET' as method,
-    'Submit' as validate
+    'Submit' as validate,
+    'search_result.sql' as action
  ;
  /* NOTE: if you add a new parameter, ensure you pass it in the shell include in index.sql for it to be available in search_results.sql */
 SELECT
