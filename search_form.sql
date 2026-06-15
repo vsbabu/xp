@@ -1,7 +1,7 @@
 SELECT
     'form' as component,
     'GET' as method,
-    'Filter' as validate
+    'Submit' as validate
  ;
  /* NOTE: if you add a new parameter, ensure you pass it in the shell include in index.sql for it to be available in search_results.sql */
 SELECT
@@ -30,7 +30,7 @@ select
     'search'          as prefix_icon,
     'Payee contains:'        as prefix,
     $payee as value,
-     4 as width;
+     12 as width;
 
 WITH c AS (
 SELECT distinct(category) as category FROM expense where category <> 'Transfer' order by 1)
@@ -40,7 +40,7 @@ SELECT
     'select' as type,
     true as multiple,
     true as create_new,
-    true as searchable, 4 as width,
+    true as searchable, 12 as width,
   json_group_array(json_object(
     'label', category,
     'value', category,
@@ -55,7 +55,7 @@ select
   'checkbox' as type,
   $exclude = 1 as checked,
   1 as value,
-  2 as width;
+  6 as width;
 
 select
   'datagrid' as name,
@@ -63,21 +63,4 @@ select
   'checkbox' as type,
   $datagrid = 1 as checked,
   1 as value,
-  2 as width;
-
-
-
-/*
-select
-    'include'    as name,
-    'Include' as label,
-    'radio' as type, 2 as width,
-    'yes' as value, TRUE as checked
-;
-select
-    'include'    as name,
-    'Exclude' as label,
-    'radio' as type, 2 as width,
-    'no' as value, FALSE as checked
-    ;
-*/
+  6 as width;

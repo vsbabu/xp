@@ -1,5 +1,4 @@
 -- This shell goes to every page
-
 WITH RECURSIVE sequence AS (
   SELECT 0 AS number
   UNION ALL
@@ -158,8 +157,16 @@ SELECT 'shell' AS component,
   {"title":"Quarterly", "icon":"calendar-pin", "submenu" :'|| submenu_qtr.sm ||'},
   {"title":"Yearly", "icon":"calendar-dollar", "submenu": '|| submenu_yr.sm || '},
   {"title":"Recent", "icon":"calendar-clock", "submenu": '|| submenu_recent.sm || '},
+  {"title":"", "icon":"search","link":"#filter_form_modal"},
   {"title":"", "icon":"'||IIF(COALESCE(sqlpage.cookie('topsidebar'),'') = '', 'layout-sidebar-left-collapse', 'layout-navbar-collapse')||'","link":"/toggle_menu.sql"},
   {"title":"", "icon":"'||IIF(COALESCE(sqlpage.cookie('lightdarkstatus'),'') = '', 'moon-stars', 'sun-high')||'","link":"/toggle_theme.sql"}
   ]' AS menu_item,
  '[XP](https://github.com/vsbabu/xp/) built with [SQLPage '||sqlpage.version()||'](https://sql-page.com/)'
 AS footer from submenu_month, submenu_qtr, submenu_yr, submenu_recent;
+
+select
+    'modal'                as component,
+    'filter_form_modal'  as id,
+    'Refine Filter' as title,
+    TRUE                   as large,
+    sqlpage.link('search_form', $ctx_json, '_sqlpage_embed') AS embed;
