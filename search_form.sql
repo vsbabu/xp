@@ -1,10 +1,10 @@
-SELECT 
+SELECT
     'form' as component,
     'GET' as method,
     'Filter' as validate
  ;
  /* NOTE: if you add a new parameter, ensure you pass it in the shell include in index.sql for it to be available in search_results.sql */
-SELECT 
+SELECT
     'start' as name,
     'date' as type,
     'calendar' as prefix_icon,
@@ -14,7 +14,7 @@ SELECT
     'now' as max,
     6 as width
 ;
-SELECT 
+SELECT
   'end' as name,
   'date' as type,
   'To:' as prefix,
@@ -24,7 +24,7 @@ SELECT
   6 as width
 ;
 
-select 
+select
     'payee'  as name,
     '' as label,
     'search'          as prefix_icon,

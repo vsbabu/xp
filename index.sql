@@ -14,30 +14,43 @@ SELECT
     AS link
 WHERE $start is null;
 
-SELECT 'dynamic' AS component,
-	sqlpage.run_sql('shell.sql')
-	AS properties;
+-- draw menu
+SELECT 'dynamic' AS component, sqlpage.run_sql('shell.sql') AS properties;
 
 
-SELECT 'dynamic' AS component,
-  sqlpage.run_sql('search_results.sql',
-    json_object(
-        't', ifnull($t, $start||' - '||$end),
-        'start', $start,
-        'end', ifnull($end, current_date),
-        'category',ifnull($category,''),
-        'exclude', ifnull($exclude,''),
-        'payee', ifnull($payee, ''),
-        'datagrid', ifnull($datagrid,''),
-        -- this pstart and pend being null will only happen when search from the form. 
-        -- in that situation, use default: pstart = start - (end-start days)
-        'pstart', ifnull($pstart,
-               date($start, concat('-',julianday(ifnull($end, current_date))-julianday($start),' days'))),
-        'pend', ifnull($pend,date($start,  '-1 days'))
-      )
-  )
-	AS properties;
+-- prepare all variables
+SET ctx_json  = json_object(
+    'start'    , $start,
+    'end'      , ifnull($end, current_date),
+    't'        , ifnull($t, $start||' - '||$end), -- if no title is passed (eg: called from search), make it up
 
-SELECT 'dynamic' AS component,
-	sqlpage.run_sql('search_form.sql')
-	AS properties;
+    -- this pstart and pend being null will only happen when search from the form.
+    -- in that situation, use default: pstart = start - (end-start days)
+    'pstart'   , ifnull($pstart, date($start, concat('-',julianday(ifnull($end, current_date))-julianday($start),' days'))),
+    'pend'     , ifnull($pend,date($start,  '-1 days')),
+
+    'category' , $category,                      -- this should be a json array; leaving as null is good
+    'exclude'  , ifnull($exclude, ''),
+    'payee'    , ifnull($payee, ''),
+    'datagrid' , ifnull($datagrid, '')
+  );
+
+-- create temp tables for the session - all query sql files below use these.
+SELECT 'dynamic' AS component, sqlpage.run_sql('r_add_temp_tables.sql', $ctx_json) AS properties;
+
+-- SELECT 'debug' as component, $ctx_json;
+
+-- page title - need to extract populated t from ctx
+SELECT 'title' as component, $ctx_json ->> '$.t' as contents;
+
+-- different components that make up the result dashboard
+SELECT 'dynamic' AS component, sqlpage.run_sql('r_bignumber_bar.sql',         $ctx_json) AS properties;
+SELECT 'dynamic' AS component, sqlpage.run_sql('r_net_chart_by_time.sql',     $ctx_json) AS properties;
+SELECT 'dynamic' AS component, sqlpage.run_sql('r_net_chart_by_category.sql', $ctx_json) AS properties;
+SELECT 'dynamic' AS component, sqlpage.run_sql('r_net_tab_by_week.sql',       $ctx_json) AS properties;
+SELECT 'dynamic' AS component, sqlpage.run_sql('r_top_n_merchants.sql',       $ctx_json) AS properties;
+SELECT 'dynamic' AS component, sqlpage.run_sql('r_full_datagrid.sql',         $ctx_json) AS properties;
+
+
+-- search form to change the query
+SELECT 'dynamic' AS component, sqlpage.run_sql('search_form.sql', $ctx_json) AS properties;

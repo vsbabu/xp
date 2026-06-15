@@ -40,11 +40,16 @@ sqlpage.bin -c personal.json
 
 ### Code Organization
 
-- [index.sql](index.sql) - main container file. This points to the root of the rendered site. If query string has missing parameters, it is filled with default values before calling `shell.sql`.
+- [index.sql](index.sql) - main container file. This points to the root of the rendered site. If a start date is missing, a redirect is issued to the same page filling values for current month. 
+                           If query string has other missing parameters, it is filled with default values.
   - [shell.sql](shell.sql) - included to draw the menu items. It has SQL for generating various date ranges based on minimum and maximum available data in the `expense` table. It also includes calls to _toggle_ menu items for dark mode and side menu.
     - [toggle_menu.sql](toggle_menu.sql) - sets a cookie when clicked and switch to side menu. On clicking again, cookie is removed. Presence of cookie is used to change default menu location and default icon.
     - [toggle_theme.sql](toggle_theme.sql) - sets a cookie when clicked and switch to dark theme. On clicking again, cookie is removed. Action is like previous one.
-  - [search_results.sql](search_results.sql) - runs a series of queries to build the dashboard based on the input parameters like date range, categories etc. Initially, these queries all had similar looking CTEs. I changed it to generate a temporary table that has filtered data and then onwards, that table is used for all queries. This serves two purposes (a) size of SQL code is less (b) temporary table acts as a cache. Since temporary tables are specific to sessions, it shouldn't collide with other parallel users. Also, I've hard coded Indian Rupee (₹) as the currency and formatted it using [printf('₹%,.0f', amount)](https://github.com/vsbabu/xp/blob/fbde88d6a9f0166a0ddc0068b3eb8fd7db046d28/search_results.sql#L222) because Indian formatting is different from thousands/millions. SQLPage currently formats according to that convention even when currency is specified as Indian Rupee (_INR_).
+  - [r_add_temp_tables.sql](r_add_temp_tables.sql) - creates two temporary tables for rest of the session from `expense` table considering all query criteria. 
+  - `r_*.sql` - these have individual queries that use these temporary tables to return different components for the dashboard.
+          I've hard coded Indian Rupee (₹) as the currency and formatted it 
+          using [printf('₹%,.0f', amount)](https://github.com/vsbabu/xp/blob/fbde88d6a9f0166a0ddc0068b3eb8fd7db046d28/search_results.sql#L222) because Indian formatting is different from thousands/millions. 
+          SQLPage currently formats according to that convention even when currency is specified as Indian Rupee (_INR_).
   - [search_form.sql](search_form.sql) - has parameters pre-filled according to query string (or defaults in its absence). Changing these and filtering will reload the page with form parameters passed as query string.
 - [csv_import.sql](csv_import.sql) - has a form to replace the `expense` table with a csv file. It calls [csv_process.sql](csv_process.sql) to load the csv uploaded into the table.
 - [assets/](assets/) - favicon files
