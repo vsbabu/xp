@@ -169,4 +169,4 @@ select
     'filter_form_modal'    as id,
     'Refine Filter'        as title,
     TRUE                   as large,
-    sqlpage.link('search_form', $ctx_json, '_sqlpage_embed') AS embed;
+    sqlpage.link('search_form', $ctx_json, '&_sqlpage_embed') AS embed;
