@@ -5,33 +5,60 @@
 -- connection is reused from the pool, but session is different.
 -- We can safely drop if exists without impacting concurrent series
 -- and proceed.
-drop table if exists filtered;
-create temporary table filtered AS select e.*
-from expense e
-WHERE date(e.dt) BETWEEN
-    date($start) and date($end)
-  and e.category in (
-    select value as category from json_each($category) where $category <> '' and ifnull($exclude,'') = ''
-    union
-    select distinct(category) from expense where ifnull($category,'') = ''
-    union
-    select distinct(x.category) from expense x where $category <> '' and ifnull($exclude, '') <> ''
-                      and x.category not in (select value as category from json_each($category))
+DROP TABLE IF EXISTS filtered;
+CREATE TEMPORARY TABLE filtered AS SELECT e.*
+FROM expense e
+WHERE DATE(e.dt) BETWEEN
+    DATE($start) AND DATE($end) AND e.category IN (
+    SELECT value AS category FROM JSON_EACH($category) WHERE $category <> '' AND IFNULL($exclude,'') = ''
+    UNION
+    SELECT DISTINCT(category) FROM expense WHERE IFNULL($category,'') = ''
+    UNION
+    SELECT DISTINCT(x.category) FROM expense x WHERE $category <> '' AND IFNULL($exclude, '') <> ''
+                      AND x.category NOT IN (SELECT value AS category FROM JSON_EACH($category))
     )
-    and (($payee <> '' and exists (select 1 from payees where payee match $payee and id=e.id )) or ($payee = ''))
+    AND (($payee <> '' AND EXISTS (SELECT 1 FROM payees WHERE payee MATCH $payee AND id=e.id )) OR ($payee = ''))
 ;
 
-drop table if exists filtered_p;
-create temporary table filtered_p AS select e.*
-from expense e
-WHERE date(e.dt) BETWEEN $pstart and $pend
-  and e.category in (
-    select value as category from json_each($category) where $category <> '' and ifnull($exclude,'') = ''
-    union
-    select distinct(category) from expense where ifnull($category,'') = ''
-    union
-    select distinct(x.category) from expense x where $category <> '' and ifnull($exclude, '') <> ''
-                      and x.category not in (select value as category from json_each($category))
+DROP TABLE IF EXISTS filtered_p;
+CREATE TEMPORARY TABLE filtered_p AS SELECT e.*
+FROM expense e
+WHERE DATE(e.dt) BETWEEN $pstart AND $pend
+  AND e.category IN (
+    SELECT value AS category FROM JSON_EACH($category) WHERE $category <> '' AND ifnull($exclude,'') = ''
+    UNION
+    SELECT DISTINCT(category) FROM expense WHERE IFNULL($category,'') = ''
+    UNION
+    SELECT DISTINCT(x.category) FROM expense x WHERE $category <> '' AND IFNULL($exclude, '') <> ''
+                      AND x.category NOT IN (SELECT value AS category FROM JSON_EACH($category))
     )
-    and (($payee <> '' and exists (select 1 from payees where payee match $payee and id=e.id )) or ($payee = ''))
+    AND (($payee <> '' AND EXISTS (SELECT 1 FROM payees WHERE payee MATCH $payee AND id=e.id )) OR ($payee = ''))
+;
+
+-- FIXME: Categories should've a lookup value for grouping in db instead of this temp table and a gui to tag Categories
+--        according to people's data
+DROP TABLE IF EXISTS category_classification;
+CREATE TEMPORARY TABLE category_classification (
+      category TEXT
+    , classification TEXT
+);
+INSERT INTO category_classification (category, classification) VALUES
+      ('Tax',           'Government')
+    , ('TDS',           'Government')
+    , ('Hire',          'Essential')
+    , ('Fuel',          'Essential')
+    , ('Grocery',       'Essential')
+    , ('Dinner',        'Essential')
+    , ('Telephone',     'Essential')
+    , ('Medicine',      'Essential')
+    , ('Car',           'Vehicles')
+    , ('Bike',          'Vehicles')
+    , ('School',        'Future')
+    , ('Insurance',     'Future')
+    , ('Interest',      'Returns')
+    , ('Reconcile',     'Returns')
+    , ('Salary',        'Essential')
+    , ('Fun',           'Often')
+    , ('Gifts',         'Often')
+    , ('Clothes',       'Often')
 ;

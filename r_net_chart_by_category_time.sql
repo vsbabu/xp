@@ -1,20 +1,20 @@
 -- FIXME: This shows no category values, for 2026-Q1 on feb 26th. Future empty ranges is NOT the problem
-select 'chart' as component,
-    'By Category' as title,
-    'bar' as type,
-    'month' as xtitle,
-    'spend' as ytitle,
-    true as stacked,
-    true as time,
-    500 as height
-;
-select category as series,
+SELECT 'chart'    AS component,
+    'Progression' AS title,
+    'bar'         AS type,
+    'month'       AS xtitle,
+    'spend'       AS ytitle,
+    true          AS stacked,
+    true          AS time,
+    500           AS height;
+
+SELECT category                           AS series,
     -- change to group by days if range is up to 2 months
-    iif(julianday($end)-julianday($start)>60,
-    strftime('%Y-%m', date(dt)),
-    strftime('%Y-%m-%d', date(dt))) as label,
-  cast(sum(net)/1 as integer) as value
-FROM filtered
-where category <> 'Transfer'
-group by 1, 2
-order by  1,2 ;
+    IIF(JULIANDAY($end) - JULIANDAY($start) > 60, STRFTIME('%Y-%m', DATE(dt)),
+    STRFTIME('%Y-%m-%d', DATE(dt)))    AS label,
+    -1 * Cast(Sum(net) / 1 AS INTEGER) AS value
+    -- -1 to switch expenses positive
+FROM   filtered
+WHERE  category NOT IN ( 'Transfer', 'Reconcile', 'Salary', 'Interest' )
+GROUP  BY 1, 2
+ORDER  BY 1, 2;
