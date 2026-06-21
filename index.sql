@@ -53,9 +53,3 @@ SELECT 'dynamic' AS component, sqlpage.run_sql('r_net_tab_by_week.sql',       $c
 
 SELECT 'dynamic' AS component, sqlpage.run_sql('r_top_n_merchants.sql',       $ctx_json) AS properties;
 SELECT 'dynamic' AS component, sqlpage.run_sql('r_full_datagrid.sql',         $ctx_json) AS properties;
-
-/*
-DROP TABLE IF EXISTS filtered;
-DROP TABLE IF EXISTS filtered_p;
-DROP TABLE IF EXISTS category_classification;
-*/
