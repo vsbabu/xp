@@ -1,6 +1,7 @@
 SELECT 'chart'        AS component,
        'treemap'      AS type,
        'Split'        AS title,
+       'col mx-2'        AS class,
        500            AS height,
        true           AS labels;
 

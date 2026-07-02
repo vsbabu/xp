@@ -1,5 +1,5 @@
 
-SELECT 'card' AS component, 2 as columns;
--- random string is added to disable caching get request from previous call
-SELECT sqlpage.link('r_net_chart_by_category_treemap', $ctx_json, '&_sqlpage_embed&r='||sqlpage.random_string(32)) AS embed, 3 as width;
-SELECT sqlpage.link('r_net_chart_by_category_time', $ctx_json, '&_sqlpage_embed&r='||sqlpage.random_string(32)) AS embed, 9 as width;
+SELECT 'html' AS component, '<div class="row">' AS html;
+SELECT 'dynamic' as component, sqlpage.run_sql('r_net_chart_by_category_treemap.sql', $ctx_json) AS properties;
+SELECT 'dynamic' as component, sqlpage.run_sql('r_net_chart_by_category_time.sql', $ctx_json) AS properties;
+SELECT '</div>' AS html;
