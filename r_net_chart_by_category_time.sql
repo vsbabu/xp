@@ -4,7 +4,7 @@ SELECT 'chart'    AS component,
     'bar'         AS type,
     'month'       AS xtitle,
     'spend'       AS ytitle,
-    'col mx-2'    AS class,
+    'col'    AS class,
     true          AS stacked,
     true          AS time,
     500           AS height;
