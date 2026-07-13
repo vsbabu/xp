@@ -1,14 +1,19 @@
 window.addEventListener("load", () => {
   // add specific colors for amounts
   colorifyAmounts: {
+    const rupeeFormatter = new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      maximumFractionDigits: 0,
+    });
     var tbls = document.getElementsByClassName("amount_table");
     for (var i = 0; i < tbls.length; i++) {
       var tbl = tbls[i];
       var cells = tbl.getElementsByTagName("td");
       for (var j = 0; j < cells.length; j++) {
         var cell = cells[j];
-        if (cell.innerText.startsWith("₹")) {
-          var val = parseFloat(cell.innerText.slice(1), 10);
+        if (cell.innerText.includes("₹")) {
+          var val = parseFloat(cell.innerText.replace(/[₹,]/g, ""));
           if (!isNaN(val)) {
             if (val == 0) {
               cell.style.color = "transparent";
@@ -17,8 +22,18 @@ window.addEventListener("load", () => {
             } else {
               cell.style.color = "#f76707"; //sqlpage orange
             }
+            cell.innerText = rupeeFormatter.format(val);
           }
         }
+      }
+    }
+    var big_number_bar = document.getElementById("colorfull_dashboard");
+    var boxes = big_number_bar.getElementsByClassName("h1 mb-0")
+    for (var i = 0; i < boxes.length; i++) {
+      var cell = boxes[i];
+      if (cell.innerText.includes("₹")) {
+        var val = parseFloat(cell.innerText.replace(/[₹,]/g, ""));
+        cell.innerText = rupeeFormatter.format(val);
       }
     }
   }

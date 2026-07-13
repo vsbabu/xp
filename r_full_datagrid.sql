@@ -4,6 +4,7 @@ select 'table' as component
     , TRUE     as freeze_headers
     , TRUE     as striped_rows
     , TRUE     as small
+    , 'amount_table' as class
     , 'INR'       as currency
     , 'Date'      as monospace
     , 'Net'       as align_right
