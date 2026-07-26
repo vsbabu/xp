@@ -8,14 +8,25 @@
 DROP TABLE IF EXISTS filtered;
 CREATE TEMPORARY TABLE filtered AS SELECT e.*
 FROM expense e
-WHERE DATE(e.dt) BETWEEN
-    DATE($start) AND DATE($end) AND e.category IN (
-    SELECT value AS category FROM JSON_EACH($category) WHERE $category <> '' AND IFNULL($exclude,'') = ''
-    UNION
-    SELECT DISTINCT(category) FROM expense WHERE IFNULL($category,'') = ''
-    UNION
-    SELECT DISTINCT(x.category) FROM expense x WHERE $category <> '' AND IFNULL($exclude, '') <> ''
-                      AND x.category NOT IN (SELECT value AS category FROM JSON_EACH($category))
+WHERE DATE(e.dt) BETWEEN DATE($start) AND DATE($end) 
+    AND e.category IN (
+      -- only one of these unions will be true in any situation
+      -- 1. if specific categories are in query, use those only
+      SELECT value AS category FROM JSON_EACH($category) WHERE $category <> '' AND IFNULL($exclude,'') = ''
+      UNION
+      -- 2. if no category given in input, take all from db. master table is required 
+      --    for large data production usecase
+      SELECT DISTINCT(category) FROM expense WHERE IFNULL($category,'') = ''
+      UNION
+      -- 3. if specific categories are in query and exclusion flag is set, get all 
+      --   from db minus what is in input
+      SELECT DISTINCT(x.category) FROM expense x WHERE $category <> '' AND IFNULL($exclude, '') <> ''
+                        AND x.category NOT IN (SELECT value AS category FROM JSON_EACH($category))
+    )
+    AND e.account IN (
+      SELECT value AS account FROM JSON_EACH($account) WHERE $account <> ''
+      UNION
+      SELECT DISTINCT(account) FROM expense WHERE IFNULL($account,'') = ''
     )
     AND (($payee <> '' AND EXISTS (SELECT 1 FROM payees WHERE payee MATCH $payee AND id=e.id )) OR ($payee = ''))
 ;
@@ -31,6 +42,11 @@ WHERE DATE(e.dt) BETWEEN $pstart AND $pend
     UNION
     SELECT DISTINCT(x.category) FROM expense x WHERE $category <> '' AND IFNULL($exclude, '') <> ''
                       AND x.category NOT IN (SELECT value AS category FROM JSON_EACH($category))
+    )
+    AND e.account IN (
+      SELECT value AS account FROM JSON_EACH($account) WHERE $account <> ''
+      UNION
+      SELECT DISTINCT(account) FROM expense WHERE IFNULL($account,'') = ''
     )
     AND (($payee <> '' AND EXISTS (SELECT 1 FROM payees WHERE payee MATCH $payee AND id=e.id )) OR ($payee = ''))
 ;

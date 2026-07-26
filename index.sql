@@ -26,6 +26,7 @@ SET ctx_json  = json_object(
     'pstart'   , ifnull($pstart, date($start, concat('-',julianday(ifnull($end, current_date))-julianday($start),' days'))),
     'pend'     , ifnull($pend,date($start,  '-1 days')),
 
+    'account'  , $account,                      -- this should be a json array; leaving as null is good
     'category' , $category,                      -- this should be a json array; leaving as null is good
     'exclude'  , ifnull($exclude, ''),
     'payee'    , ifnull($payee, ''),

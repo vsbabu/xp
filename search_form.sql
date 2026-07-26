@@ -34,6 +34,25 @@ select
      12 as width;
 
 WITH c AS (
+-- instead of querying every time, these should be a materialized view or another table for real production
+SELECT distinct(account) as account FROM expense order by 1)
+SELECT
+    'account[]' as name, '' as label,
+    'Accounts' as placeholder,
+    'select' as type,
+    true as multiple,
+    true as create_new,
+    true as searchable, 12 as width,
+  json_group_array(json_object(
+    'label', account,
+    'value', account,
+    'selected', sel.value is not null
+)) as options
+FROM c left join json_each($account) as sel
+on c.account = sel.value;
+
+WITH c AS (
+-- instead of querying every time, these should be a materialized view or another table for real production
 SELECT distinct(category) as category FROM expense where category <> 'Transfer' order by 1)
 SELECT
     'category[]' as name, '' as label,

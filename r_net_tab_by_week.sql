@@ -1,3 +1,21 @@
+select
+    'divider' as component,
+    'Weekly'   as contents,
+    TRUE  as bold;
+
+SELECT 'html' AS component,
+    '<ul class="nav nav-pills" id="myTab" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="home-tab" data-bs-toggle="tab" data-bs-target="#home" type="button" role="tab" aria-controls="home" aria-selected="true">By Category</button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile" type="button" role="tab" aria-controls="profile" aria-selected="false">By Day</button>
+      </li>
+    </ul>
+    <div class="tab-content" id="myTabContent">
+      <div class="tab-pane fade show active" id="home" role="tabpanel" aria-labelledby="home-tab">'
+    AS html;
+
 SELECT
     'table' as component
   , TRUE    as sort
@@ -91,12 +109,11 @@ params AS (SELECT date($start) as begin_cal, date($end) as end_cal),
     GROUP BY component HAVING (julianday($end) - julianday($start)) < 60 -- To hide row completely
 ;
 
-select
-    'divider' as component,
-    'By Weekday'   as contents,
-    TRUE  as bold;
+SELECT 'html' AS component,
+    '</div>
+      <div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">' as html;
 
-SELECT
+ SELECT
     'table' as component
   , TRUE    as sort
   , FALSE   as search
@@ -144,3 +161,7 @@ params AS (SELECT date($start) as begin_cal, date($end) as end_cal),
 FROM bounds, all_dates_metric adm
 GROUP BY adm.week
 ;
+
+
+SELECT 'html' AS component,
+    '</div></div>' as html;

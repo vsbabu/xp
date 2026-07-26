@@ -3,6 +3,7 @@ SELECT
     '/?'
     || 'start=' || $start
     || '&end=' || $end
+    || iif($account is not null, '&account='||$account,'')
     || iif($category is not null, '&category='||$category,'')
     || iif($exclude is not null, '&exclude='||$exclude,'')
     || iif($payee is not null, '&payee='||$payee,'')
