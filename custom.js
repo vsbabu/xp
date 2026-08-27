@@ -32,8 +32,23 @@ window.addEventListener("load", () => {
     for (var i = 0; i < boxes.length; i++) {
       var cell = boxes[i];
       if (cell.innerText.includes("₹")) {
-        var val = parseFloat(cell.innerText.replace(/[₹,]/g, ""));
+        const val = parseFloat(cell.innerText.replace(/[₹,]/g, ""));
         cell.innerText = rupeeFormatter.format(val);
+      }
+    }
+    var other_amounts = document.getElementsByClassName("hr-text");
+    for (var i = 0; i < other_amounts.length; i++) {
+      var cell = other_amounts[i];
+      if (cell.innerText.includes("₹")) {
+        const text = cell.innerText;
+        const startingIndex = text.indexOf("₹")+1;
+        const prefix = text.slice(0, startingIndex-1);
+        const match = text.slice(startingIndex).match(/^[-\d.]+/);
+        const suffix = text.slice(startingIndex + match[0].length)
+        const extractedNumber = match ? Number(match[0]) : null;
+        const val = parseFloat(extractedNumber, "");
+        const ftext = rupeeFormatter.format(val);
+        cell.innerText = prefix + ftext + suffix;
       }
     }
   }
