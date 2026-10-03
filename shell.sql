@@ -157,7 +157,7 @@ SELECT 'shell' AS component,
   {"title":"Quarterly", "icon":"calendar-pin", "submenu" :'|| submenu_qtr.sm ||'},
   {"title":"Yearly", "icon":"calendar-dollar", "submenu": '|| submenu_yr.sm || '},
   {"title":"Recent", "icon":"calendar-clock", "submenu": '|| submenu_recent.sm || '},
-  {"title":"", "icon":"search","link":"#filter_form_modal"},
+  {"title":"", "active":' || IIF(sqlpage.cookie('filter_criteria')->>'$.exists', true, false)  ||',"icon":"' || IIF(sqlpage.cookie('filter_criteria')->>'$.exists', 'zoom-exclamation', 'search') || '","link":"#filter_form_modal"},
   {"title":"", "icon":"'||IIF(COALESCE(sqlpage.cookie('topsidebar'),'') = '', 'layout-sidebar-left-collapse', 'layout-navbar-collapse')||'","link":"/toggle_menu.sql"},
   {"title":"", "icon":"'||IIF(COALESCE(sqlpage.cookie('lightdarkstatus'),'') = '', 'moon-stars', 'sun-high')||'","link":"/toggle_theme.sql"}
   ]' AS menu_item,
