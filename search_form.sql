@@ -2,6 +2,7 @@ SELECT
     'form' as component,
     'GET' as method,
     'Submit' as validate,
+    'filter_form' as id,
     'search_result.sql' as action
  ;
  /* NOTE: if you add a new parameter, ensure you pass it in the shell include in index.sql for it to be available in search_results.sql */
@@ -84,3 +85,15 @@ select
   $datagrid = 1 as checked,
   1 as value,
   6 as width;
+
+SELECT
+    'button' as component,
+    'sm'     as size,
+    'pill'   as shape,
+    'end' as justify;
+select
+    'danger' as color,
+    'danger' as outline,
+    'Clear' as title,
+    'search_result.sql' as link
+ ; -- FIXME: an additional border is being set

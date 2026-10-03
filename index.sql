@@ -25,13 +25,31 @@ SET ctx_json  = json_object(
     -- in that situation, use default: pstart = start - (end-start days)
     'pstart'   , ifnull($pstart, date($start, concat('-',julianday(ifnull($end, current_date))-julianday($start),' days'))),
     'pend'     , ifnull($pend,date($start,  '-1 days')),
-
-    'account'  , $account,                      -- this should be a json array; leaving as null is good
-    'category' , $category,                      -- this should be a json array; leaving as null is good
-    'exclude'  , ifnull($exclude, ''),
-    'payee'    , ifnull($payee, ''),
-    'datagrid' , ifnull($datagrid, '')
+    -- next two should be a json arrays; leaving as null is good
+    'account'  , ifnull($account,  sqlpage.cookie('filter_criteria')->>'$.account'),
+    'category' , ifnull($category, sqlpage.cookie('filter_criteria')->>'$.category'),
+    'exclude'  , ifnull($exclude,  ifnull(sqlpage.cookie('filter_criteria')->>'$.exclude', '')),
+    'payee'    , ifnull($payee,    ifnull(sqlpage.cookie('filter_criteria')->>'$.payee', '')),
+    'datagrid' , ifnull($datagrid, ifnull(sqlpage.cookie('filter_criteria')->>'$.datagrid', ''))
   );
+
+SELECT 'cookie' AS component,
+    'filter_criteria' AS name,
+     json_quote(json_object(
+        'account',  $ctx_json->'$.account',
+        'category', $ctx_json->'$.category',
+        'exclude',  $ctx_json->'$.exclude',
+        'payee',    $ctx_json->'$.payee',
+        'datagrid', $ctx_json->'$.datagrid',
+        'exists',   (
+            ($ctx_json->>'$.account' is not null)  OR
+            ($ctx_json->>'$.category' is not null) OR
+            ($ctx_json->>'$.payee' <> '') OR
+            ($ctx_json->>'$.datagrid' <> '')
+        )
+     )) AS value,
+     FALSE AS secure
+;
 
 -- draw menu
 SELECT 'dynamic' AS component, sqlpage.run_sql('shell.sql') AS properties;

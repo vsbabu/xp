@@ -70,4 +70,31 @@ window.addEventListener("load", () => {
     h1.innerHTML = tobe;
   }
 
+  //FIXME: this doesn't reset the multi-select boxes; so for now, using simple redirect to one button clear the form
+  formReset : {
+    const form = document.getElementById('filter_form');
+    if (form) {
+      console.log("Form identitied in window load");
+      form.addEventListener('reset', () => {
+          console.log('Form reset');
+          const formInputs = document.querySelectorAll("#filter_form input");
+          formInputs.forEach(input => {
+              console.log(input.name + " -> " + input.type + '|' + input.value);
+              switch (input.type) {
+                  case 'radio':
+                  case 'checkbox':
+                    input.checked = false;
+                    input.value = 0;
+                    break;
+                  case 'text':
+                    input.value = '';
+                    break;
+                  default:
+                    break;
+              }
+          })
+      });
+    }
+  }
+
 });
