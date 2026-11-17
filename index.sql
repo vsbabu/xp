@@ -49,6 +49,7 @@ SELECT 'cookie' AS component,
         )
      )) AS value,
      FALSE AS secure
+    WHERE ifnull($set_filter_cookie,'1') = '1'; -- this is to handle chart zoomin to NOT overwrite cookie criteria
 ;
 
 -- draw menu
