@@ -49,7 +49,7 @@ SELECT
     'value', account,
     'selected', sel.value is not null
 )) as options
-FROM c left join json_each($account) as sel
+FROM c left join json_each(iif($account='',NULL,$account)) as sel
 on c.account = sel.value;
 
 WITH c AS (
@@ -67,7 +67,7 @@ SELECT
     'value', category,
     'selected', sel.value is not null
 )) as options
-FROM c left join json_each($category) as sel
+FROM c left join json_each(iif($category='',NULL,$category)) as sel
 on c.category = sel.value;
 
 select
